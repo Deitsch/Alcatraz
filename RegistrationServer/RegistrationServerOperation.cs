@@ -6,7 +6,7 @@ namespace RegistrationServer
 {
     public enum RegistrationServerOperation
     {
-        Write = 0,
+        Write = 1,
         Read,
         Join,
         Leave,

@@ -45,7 +45,6 @@ namespace RegistrationServer
                             string response = spread.ReceiveMessage();
                             Console.WriteLine(response);
                         }
-                        break;
                     }
                 case RegistrationServerOperation.Join:
                     {
