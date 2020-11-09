@@ -23,4 +23,10 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="AlcatrazLib">
+      <HintPath>GameClient\AlcatrazLib.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
