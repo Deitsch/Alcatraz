@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace RegistrationServer2
+{
+    public static class ConfigFile
+    {
+        public const string SPREAD_ADDRESS = "127.0.0.1";
+        public const int SPREAD_PORT = 4803;
+        public const string SPREAD_USER = "DSI";
+        public const bool SPREAD_PRIORITY = false;
+        public const bool SPREAD_GROUP_MEMBERSHIP = true;
+
+        public const string SPREAD_GROUP_NAME = "group";
+    }
+}

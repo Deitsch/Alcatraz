@@ -1,62 +1,53 @@
-﻿using RegistrationServer.Spread;
-using spread;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+using RegistrationServer2.Spread;
+using spread;
 
-namespace RegistrationServer
+namespace RegistrationServer2
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            ShowMenu();
-            HandleUserInput();
-        }
-
-        private static void ShowMenu()
-        {
-            Console.WriteLine("Menue");
-            Console.WriteLine("1. Write");
-            Console.WriteLine("2. Read");
-        }
-
-        private static void HandleUserInput()
-        {
-            string message = Console.ReadLine();
-            int selectedOption = Convert.ToInt32(message);
-
-            SpreadConn spread = new SpreadConn(new SpreadConnection());
-
-            switch (selectedOption.toRegistrationServerOperation())
+            try
             {
-                case RegistrationServerOperation.Write:
-                    {
-                        spread.Connect(ConfigFile.SPREAD_ADDRESS, ConfigFile.SPREAD_PORT, Guid.NewGuid().ToString(), ConfigFile.SPREAD_PRIORITY, ConfigFile.SPREAD_GROUP_MEMBERSHIP);
-                        SpreadGroup spreadGroup = spread.JoinGroup(ConfigFile.SPREAD_GROUP_NAME);
-                        string input = Console.ReadLine();
-                        spread.SendMessage(input, spreadGroup);
-                        break;
-                    }
-                case RegistrationServerOperation.Read:
-                    {
-                        spread.Connect(ConfigFile.SPREAD_ADDRESS, ConfigFile.SPREAD_PORT, Guid.NewGuid().ToString(), ConfigFile.SPREAD_PRIORITY, ConfigFile.SPREAD_GROUP_MEMBERSHIP);
-                        SpreadGroup spreadGroup = spread.JoinGroup(ConfigFile.SPREAD_GROUP_NAME);
-                        while (true)
-                        {
-                            string response = spread.ReceiveMessage();
-                            Console.WriteLine(response);
-                        }
-                    }
-                case RegistrationServerOperation.Join:
-                    {
-                        break;
-                    }
-                case RegistrationServerOperation.Leave:
-                    {
-                        break;
-                    }
+                SpreadConn spread = new SpreadConn(new SpreadConnection());
+                spread.Connect(ConfigFile.SPREAD_ADDRESS, ConfigFile.SPREAD_PORT, Guid.NewGuid().ToString(), ConfigFile.SPREAD_PRIORITY, ConfigFile.SPREAD_GROUP_MEMBERSHIP);
+                SpreadGroup spreadGroup = spread.JoinGroup(ConfigFile.SPREAD_GROUP_NAME);
+
+                recThread rt = new recThread(spread.spreadConnection);
+                Thread rtt = new Thread(new ThreadStart(rt.run));
+                rtt.Start();
+            }
+            catch (SpreadException e)
+            {
+                Console.Error.WriteLine("There was an error connecting to the daemon.");
+                Console.WriteLine(e);
+                Environment.Exit(1);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("Can't find the daemon " + ConfigFile.SPREAD_ADDRESS);
+                Console.WriteLine(e);
+                Environment.Exit(1);
             }
 
-            Console.ReadLine();
+            CreateHostBuilder(args).Build().Run();
         }
+
+        // Additional configuration is required to successfully run gRPC on macOS.
+        // For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                });
     }
 }
