@@ -34,7 +34,7 @@ using System;
 using System.Threading;
 using spread;
 
-namespace RegistrationServer2
+namespace RegistrationServer
 {
 
 	public class recThread

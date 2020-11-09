@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace RegistrationServer2
+namespace RegistrationServer
 {
     public static class ConfigFile
     {

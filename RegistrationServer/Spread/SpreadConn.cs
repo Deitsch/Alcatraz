@@ -1,17 +1,41 @@
-﻿using spread;
+﻿using RegistrationServer.Spread.Interface;
+using spread;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
-namespace RegistrationServer2.Spread
+namespace RegistrationServer.Spread
 {
-    public class SpreadConn
+    public class SpreadConn : ISpreadConn
     {
-        public SpreadConnection spreadConnection { get; }
+        SpreadConnection _spreadConnection { get; }
+        SpreadGroup _spreadGroup { get; }
 
-        public SpreadConn(SpreadConnection spreadConnection)
+        public SpreadConn()
         {
-            this.spreadConnection = spreadConnection;
+            try
+            {
+                _spreadConnection = new SpreadConnection();
+                Connect(ConfigFile.SPREAD_ADDRESS, ConfigFile.SPREAD_PORT, Guid.NewGuid().ToString(), ConfigFile.SPREAD_PRIORITY, ConfigFile.SPREAD_GROUP_MEMBERSHIP);
+                _spreadGroup = JoinGroup(ConfigFile.SPREAD_GROUP_NAME);
+
+                recThread rt = new recThread(_spreadConnection);
+                Thread rtt = new Thread(new ThreadStart(rt.run));
+                rtt.Start();
+            }
+            catch (SpreadException e)
+            {
+                Console.Error.WriteLine("There was an error connecting to the daemon.");
+                Console.WriteLine(e);
+                Environment.Exit(1);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("Can't find the daemon " + ConfigFile.SPREAD_ADDRESS);
+                Console.WriteLine(e);
+                Environment.Exit(1);
+            }
         }
 
         //Parameter user must be unique!
@@ -19,7 +43,7 @@ namespace RegistrationServer2.Spread
         {
             try
             {
-                spreadConnection.Connect(address, port, user, priority, groupMembership);
+                _spreadConnection.Connect(address, port, user, priority, groupMembership);
                 Console.WriteLine($"Log: connected with: {address}; {port}; {user}; {priority}; {groupMembership}");
             }
             catch (SpreadException e)
@@ -33,8 +57,13 @@ namespace RegistrationServer2.Spread
         public SpreadGroup JoinGroup(string groupName)
         {
             SpreadGroup spreadGroup = new SpreadGroup();
-            spreadGroup.Join(spreadConnection, groupName);
+            spreadGroup.Join(_spreadConnection, groupName);
             return spreadGroup;
+        }
+
+        public void SendMessage(string message)
+        {
+            SendMessage(message, _spreadGroup);
         }
 
         public void SendMessage(string message, SpreadGroup spreadGroup)
@@ -43,12 +72,12 @@ namespace RegistrationServer2.Spread
             msg.Data = Encoding.ASCII.GetBytes(message);
             msg.AddGroup(spreadGroup);
             msg.IsSafe = true;
-            spreadConnection.Multicast(msg);
+            _spreadConnection.Multicast(msg);
         }
 
         public string ReceiveMessage()
         {
-            SpreadMessage spreadMessage = spreadConnection.Receive();
+            SpreadMessage spreadMessage = _spreadConnection.Receive();
 
             if (spreadMessage.IsMembership)
             {

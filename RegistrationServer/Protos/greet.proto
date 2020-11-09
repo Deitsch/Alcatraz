@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option csharp_namespace = "RegistrationServer2";
+option csharp_namespace = "RegistrationServer";
 
 
 // The greeting service definition.
