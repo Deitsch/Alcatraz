@@ -34,7 +34,8 @@ namespace RegistrationServer
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGrpcService<GreeterService>();
+                //endpoints.MapGrpcService<GreeterService>();
+                endpoints.MapGrpcService<LobbyService>();
 
                 endpoints.MapGet("/", async context =>
                 {

@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Grpc.Net.Client;
+using GrpcClient.Proto;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
@@ -11,17 +9,16 @@ namespace GrpcClient
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            var channel = GrpcChannel.ForAddress("http://localhost:5001");
-            var client = new Greeter.GreeterClient(channel);
-
-            var response = client.SayHello(
-                new HelloRequest { Name = "SCHEISS" }
-                );
-
-            Console.WriteLine(response.Message);
+            // The port number(5001) must match the port of the gRPC server.
+            using var channel = GrpcChannel.ForAddress("http://localhost:5001");
+            var client = new Lobby.LobbyClient(channel);
+            var reply = await client.JoinLobbyAsync(new JoinLobbyRequest { Name = "SWEGGRPC" });
+            Console.WriteLine("Greeting: " + reply.Name);
+            Console.WriteLine("Press any key to exit...");
+            Console.ReadKey();
 
             CreateHostBuilder(args).Build().Run();
         }

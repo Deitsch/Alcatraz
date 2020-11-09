@@ -12,10 +12,10 @@ namespace Client
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             // The port number(5001) must match the port of the gRPC server.
             using var channel = GrpcChannel.ForAddress("http://localhost:5001");
-            var client = new Greeter.GreeterClient(channel);
-            var reply = await client.SayHelloAsync(
-                              new HelloRequest { Name = "FUCKING SCHEISS GRPC" });
-            Console.WriteLine("Greeting: " + reply.Message);
+            var client = new LobbyService.LobbyServiceClient(channel);
+            var reply = await client.JoinLobbyAsync(
+                              new JoinLobbyRequest { Name = "SWEGGRPC" });
+            Console.WriteLine("Greeting: " + reply.Name);
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
         }

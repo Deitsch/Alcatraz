@@ -6,9 +6,10 @@
     <AssemblyName>PrototypClient</AssemblyName>
   </PropertyGroup>
 
-  <!-- <ItemGroup>
+  <ItemGroup>
+    <None Remove="Protos\Lobby.proto" />
     <None Remove="Protos\greet.proto" />
-  </ItemGroup> -->
+  </ItemGroup> 
 
   <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="3.13.0" />
@@ -21,6 +22,7 @@
 
   <ItemGroup>
     <Protobuf Include="Protos\greet.proto" GrpcServices="Client" />
+    <Protobuf Include="Protos\Lobby.proto" GrpcServices="Client" />
   </ItemGroup>
 
 </Project>

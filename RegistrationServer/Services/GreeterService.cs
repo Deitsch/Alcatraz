@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
+using RegistrationServer.Spread.Interface;
 
 namespace RegistrationServer
 {
@@ -14,7 +15,6 @@ namespace RegistrationServer
 
         public override Task<HelloReply> SayHello(HelloRequest request, ServerCallContext context)
         {
-            _logger.LogInformation("lul");
             return Task.FromResult(new HelloReply
             {
                 Message = "Hello " + request.Name

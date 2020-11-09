@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-option csharp_namespace = "RegistrationServer.Protos";
+option csharp_namespace = "Client";
 
-service Lobby {
+service LobbyService {
   rpc JoinLobby (JoinLobbyRequest) returns (Player);
 }
 

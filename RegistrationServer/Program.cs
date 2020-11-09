@@ -17,9 +17,9 @@ namespace RegistrationServer
         {
             //try
             //{
-            //    //SpreadConn spread = new SpreadConn(new SpreadConnection());
-            //    //spread.Connect(ConfigFile.SPREAD_ADDRESS, ConfigFile.SPREAD_PORT, Guid.NewGuid().ToString(), ConfigFile.SPREAD_PRIORITY, ConfigFile.SPREAD_GROUP_MEMBERSHIP);
-            //    //SpreadGroup spreadGroup = spread.JoinGroup(ConfigFile.SPREAD_GROUP_NAME);
+            //    SpreadConn spread = new SpreadConn(new SpreadConnection());
+            //    spread.Connect(ConfigFile.SPREAD_ADDRESS, ConfigFile.SPREAD_PORT, Guid.NewGuid().ToString(), ConfigFile.SPREAD_PRIORITY, ConfigFile.SPREAD_GROUP_MEMBERSHIP);
+            //    SpreadGroup spreadGroup = spread.JoinGroup(ConfigFile.SPREAD_GROUP_NAME);
 
             //    recThread rt = new recThread(spread.spreadConnection);
             //    Thread rtt = new Thread(new ThreadStart(rt.run));
