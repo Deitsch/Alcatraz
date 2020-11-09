@@ -15,7 +15,7 @@ namespace GrpcClient
             // The port number(5001) must match the port of the gRPC server.
             using var channel = GrpcChannel.ForAddress("http://localhost:5001");
             var client = new Lobby.LobbyClient(channel);
-            var reply = await client.JoinLobbyAsync(new JoinLobbyRequest { Name = "SWEGGRPC" });
+            var reply = await client.JoinLobbyAsync(new JoinLobbyRequest { Name = "OIDA" });
             foreach (var player in reply.Players)
             {
                 Console.WriteLine("InLobby: " + player.Name);

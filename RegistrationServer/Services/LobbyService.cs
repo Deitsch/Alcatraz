@@ -23,7 +23,8 @@ namespace RegistrationServer
             var bla = new JoinLobbyResponse();
             bla.Players.Add(new Player { Name = "Hans" });
             bla.Players.Add(new Player { Name = "Fritz" });
-            bla.Players.Add(new Player { Name = "Lisa" });
+            bla.Players.Add(new Player { Name = request.Name });
+            spreadConn.SendMessage($"New Player: {request.Name}");
             return Task.FromResult(bla);
         }
     }
