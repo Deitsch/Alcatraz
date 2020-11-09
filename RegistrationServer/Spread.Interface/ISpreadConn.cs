@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RegistrationServer.Spread.Interface
 {
-    interface ISpreadConn
+    public interface ISpreadConn
     {
 
         public void Connect(string address, int port, string user, bool priority, bool groupMembership);

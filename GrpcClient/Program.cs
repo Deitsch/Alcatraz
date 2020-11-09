@@ -16,7 +16,10 @@ namespace GrpcClient
             using var channel = GrpcChannel.ForAddress("http://localhost:5001");
             var client = new Lobby.LobbyClient(channel);
             var reply = await client.JoinLobbyAsync(new JoinLobbyRequest { Name = "SWEGGRPC" });
-            Console.WriteLine("Greeting: " + reply.Name);
+            foreach (var player in reply.Players)
+            {
+                Console.WriteLine("InLobby: " + player.Name);
+            }
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
 

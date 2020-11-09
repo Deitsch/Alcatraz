@@ -3,11 +3,15 @@ syntax = "proto3";
 option csharp_namespace = "GrpcClient.Proto";
 
 service Lobby {
-  rpc JoinLobby (JoinLobbyRequest) returns (Player);
+  rpc JoinLobby (JoinLobbyRequest) returns (JoinLobbyResponse);
 }
 
 message JoinLobbyRequest {
   string name = 1;
+}
+
+message JoinLobbyResponse {
+    repeated Player players = 1;
 }
 
 message Player {
