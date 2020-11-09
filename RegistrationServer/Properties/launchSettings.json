@@ -8,7 +8,7 @@
     }
   },
   "profiles": {
-    "RegistrationServer2": {
+    "RegistrationServer": {
       "commandName": "Project",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
