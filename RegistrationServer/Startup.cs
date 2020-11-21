@@ -20,6 +20,7 @@ namespace RegistrationServer
         {
             services.AddGrpc();
             services.AddSingleton<ISpreadConn, SpreadConn>();
+            services.AddSingleton<LobbyService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
