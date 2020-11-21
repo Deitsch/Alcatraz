@@ -4,7 +4,15 @@ option csharp_namespace = "RegistrationServer.Proto";
 
 service Lobby {
   rpc CreateLobby (CreateLobbyRequest) returns (JoinLobbyResponse);
+  rpc GetLobbies (GetLobbiesRequest) returns (GetLobbiesResponse);
   rpc JoinLobby (JoinLobbyRequest) returns (JoinLobbyResponse);
+}
+
+message GetLobbiesRequest {
+}
+
+message GetLobbiesResponse {
+  repeated LobbyInfo lobbies = 1;
 }
 
 message CreateLobbyRequest {

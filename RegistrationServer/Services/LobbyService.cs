@@ -21,6 +21,17 @@ namespace RegistrationServer
             lobbies = new List<LobbyInfo>();
         }
 
+        public override Task<GetLobbiesResponse> GetLobbies(GetLobbiesRequest request, ServerCallContext context)
+        {
+            var response = new GetLobbiesResponse();
+            foreach (var lobby in lobbies)
+            {
+                response.Lobbies.Add(lobby);
+            }
+
+            return Task.FromResult(response);
+        }
+
         public override Task<JoinLobbyResponse> CreateLobby(CreateLobbyRequest request, ServerCallContext context)
         {
             var response = new JoinLobbyResponse();

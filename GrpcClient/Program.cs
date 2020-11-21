@@ -13,12 +13,12 @@ namespace GrpcClient
     public class Program
     {
         private static string helpText = 
-                                @$"Use following commands to interact with server:{Environment.NewLine}
-                                0. Help{Environment.NewLine}
-                                1. Get Lobbies{Environment.NewLine}
-                                2. Create Lobby
-                                3. Join Lobby
-                                4. Exit";
+                                $"Use following commands to interact with server:{Environment.NewLine}"+
+                                $"0. Help{Environment.NewLine}"+
+                                $"1. Get Lobbies{Environment.NewLine}"+
+                                $"2. Create Lobby{Environment.NewLine}"+
+                                $"3. Join Lobby{Environment.NewLine}"+
+                                $"4. Exit";
 
         private static Lobby.LobbyClient client;
 
@@ -30,14 +30,8 @@ namespace GrpcClient
             client = new Lobby.LobbyClient(channel);
             Console.WriteLine(helpText);
 
-
             HandleUserInput();
 
-            //var reply = await client.CreateLobbyAsync(new CreateLobbyRequest {  Ip="127.0.0.1", Port=5001, PlayerName = "FirstPlayer" });
-            //foreach (var player in reply.Players)
-            //{
-            //    Console.WriteLine("InLobby: " + player.Name);
-            //}
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
 
@@ -56,7 +50,7 @@ namespace GrpcClient
                         Console.WriteLine(helpText);
                         break;
                     case "1":
-                        Console.WriteLine("not implemented");
+                        GetLobbies();
                         break;
                     case "2":
                         Console.Write("Player Name: ");
@@ -74,13 +68,22 @@ namespace GrpcClient
             }
         }
 
+        private static void GetLobbies() 
+        {
+            var reply = client.GetLobbies(new GetLobbiesRequest());
+            foreach (var lobby in reply.Lobbies)
+            {
+                Console.WriteLine($"LobbyId: {lobby.Id} Players: {string.Join(", ", lobby.Players.Select(x => x.Name))}");
+            }
+        }
+
         private static void CreateLobby(string playerName) 
         {
             var reply = client.CreateLobby(new CreateLobbyRequest { Ip = "127.0.0.1", Port = 5001, PlayerName = playerName });
             var players = new Player[4];
             reply.Lobby.Players.CopyTo(players,0);
             var playersList = players.ToList();
-            Console.WriteLine($"You created Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ",reply.Lobby.Players.Select(x => x.Name))}");
+            Console.WriteLine($"You created and joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ",reply.Lobby.Players.Select(x => x.Name))}");
         }
 
 
