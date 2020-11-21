@@ -54,10 +54,6 @@ namespace RegistrationServer
         public override Task<JoinLobbyResponse> JoinLobby(JoinLobbyRequest request, ServerCallContext context)
         {
             var response = new JoinLobbyResponse();
-            //var lobby = lobbies.Find(x => x.Id == request.LobbyId);
-            //response.Players.Add(new Player { Name = "Hans" });
-            //response.Players.Add(new Player { Name = "Fritz" });
-            //response.Players.Add(new Player { Name = request.PlayerName });
             spreadConn.SendMessage($"New Player: {request.PlayerName}");
             return Task.FromResult(response);
         }
