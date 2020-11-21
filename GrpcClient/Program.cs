@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Grpc.Net.Client;
 using GrpcClient.Proto;
@@ -9,22 +12,77 @@ namespace GrpcClient
 {
     public class Program
     {
+        private static string helpText = 
+                                @$"Use following commands to interact with server:{Environment.NewLine}
+                                0. Help{Environment.NewLine}
+                                1. Get Lobbies{Environment.NewLine}
+                                2. Create Lobby
+                                3. Join Lobby
+                                4. Exit";
+
+        private static Lobby.LobbyClient client;
+
         public static async Task Main(string[] args)
         {
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             // The port number(5001) must match the port of the gRPC server.
             using var channel = GrpcChannel.ForAddress("http://localhost:5001");
-            var client = new Lobby.LobbyClient(channel);
-            var reply = await client.JoinLobbyAsync(new JoinLobbyRequest { Name = "OIDA" });
-            foreach (var player in reply.Players)
-            {
-                Console.WriteLine("InLobby: " + player.Name);
-            }
+            client = new Lobby.LobbyClient(channel);
+            Console.WriteLine(helpText);
+
+
+            HandleUserInput();
+
+            //var reply = await client.CreateLobbyAsync(new CreateLobbyRequest {  Ip="127.0.0.1", Port=5001, PlayerName = "FirstPlayer" });
+            //foreach (var player in reply.Players)
+            //{
+            //    Console.WriteLine("InLobby: " + player.Name);
+            //}
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
 
             CreateHostBuilder(args).Build().Run();
         }
+
+        private static void HandleUserInput() 
+        {
+            Console.Write("Input: ");
+            var userInput = Console.ReadLine();
+            while (userInput != "4")
+            {
+                switch (userInput)
+                {
+                    case "0":
+                        Console.WriteLine(helpText);
+                        break;
+                    case "1":
+                        Console.WriteLine("not implemented");
+                        break;
+                    case "2":
+                        Console.Write("Player Name: ");
+                        var playerName = Console.ReadLine();
+                        CreateLobby(playerName);
+                        break;
+                    case "3":
+                        Console.WriteLine("not implemented");
+                        break;
+                    default:
+                        break;
+                }
+                Console.Write("Input: ");
+                userInput = Console.ReadLine();
+            }
+        }
+
+        private static void CreateLobby(string playerName) 
+        {
+            var reply = client.CreateLobby(new CreateLobbyRequest { Ip = "127.0.0.1", Port = 5001, PlayerName = playerName });
+            var players = new Player[4];
+            reply.Lobby.Players.CopyTo(players,0);
+            var playersList = players.ToList();
+            Console.WriteLine($"You created Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ",reply.Lobby.Players.Select(x => x.Name))}");
+        }
+
 
         // Additional configuration is required to successfully run gRPC on macOS.
         // For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682

@@ -3,17 +3,34 @@ syntax = "proto3";
 option csharp_namespace = "RegistrationServer.Proto";
 
 service Lobby {
+  rpc CreateLobby (CreateLobbyRequest) returns (JoinLobbyResponse);
   rpc JoinLobby (JoinLobbyRequest) returns (JoinLobbyResponse);
 }
 
+message CreateLobbyRequest {
+  string playerName = 1;
+  string ip = 2;
+  int32 port = 3;
+}
+
 message JoinLobbyRequest {
-  string name = 1;
+  string playerName = 1;
+  string ip = 2;
+  int32 port = 3;
+  string lobbyId = 4;
 }
 
 message JoinLobbyResponse {
-    repeated Player players = 1;
+    LobbyInfo lobby = 1;
 }
 
 message Player {
-    string name = 1;
+  string ip = 1;
+  int32 port = 2;
+  string name = 3;
+}
+
+message LobbyInfo {
+  string id = 1;
+  repeated Player players = 2;
 }
