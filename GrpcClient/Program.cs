@@ -80,9 +80,6 @@ namespace GrpcClient
         private static void CreateLobby(string playerName) 
         {
             var reply = client.CreateLobby(new CreateLobbyRequest { Ip = "127.0.0.1", Port = 5001, PlayerName = playerName });
-            var players = new Player[4];
-            reply.Lobby.Players.CopyTo(players,0);
-            var playersList = players.ToList();
             Console.WriteLine($"You created and joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ",reply.Lobby.Players.Select(x => x.Name))}");
         }
 
