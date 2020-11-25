@@ -3,10 +3,6 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Protobuf Include="Protos\greet.proto" GrpcServices="Server" />
-  </ItemGroup>
   <ItemGroup>
     <Protobuf Include="Protos\Lobby.proto" GrpcServices="Server" />
   </ItemGroup>

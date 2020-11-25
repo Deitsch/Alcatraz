@@ -9,7 +9,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="Protos\greet.proto" GrpcServices="Client" />
     <Protobuf Include="Protos\Lobby.proto" GrpcServices="Client" />
   </ItemGroup>
 
@@ -27,6 +26,10 @@
     <Reference Include="AlcatrazLib">
       <HintPath>..\AlcatrazGame\AlcatrazLib.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>
