@@ -49,6 +49,12 @@ namespace RegistrationServer
         {
             var response = new JoinLobbyResponse();
             var lobbyToJoin = lobbies.Single(l => l.Id == request.LobbyId);
+            var playerNameExists = lobbyToJoin.Players.Any(p => p.Name == request.Player.Name);
+            if (playerNameExists)
+            {
+                throw new RpcException(new Status(StatusCode.AlreadyExists,
+                    $"A player with that name is already in lobby {lobbyToJoin.Id}"));
+            }
             lobbyToJoin.Players.Add(request.Player);
             spreadConn.SendMessage($"New Player: {request.Player.Name}");
             response.Lobby = lobbyToJoin;
@@ -62,7 +68,5 @@ namespace RegistrationServer
             lobbyToLeave.Players.Remove(request.Player);
             return Task.FromResult(response);
         }
-
-
     }
 }
