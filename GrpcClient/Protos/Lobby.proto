@@ -12,33 +12,29 @@ message GetLobbiesRequest {
 }
 
 message GetLobbiesResponse {
-  repeated LobbyInfo lobbies = 1;
+	repeated LobbyInfo lobbies = 1;
 }
 
 message CreateLobbyRequest {
-  string playerName = 1;
-  string ip = 2;
-  int32 port = 3;
+	Player player = 1;
 }
 
 message JoinLobbyRequest {
-  string playerName = 1;
-  string ip = 2;
-  int32 port = 3;
-  string lobbyId = 4;
+	string lobbyId = 1;
+	Player player = 2;
 }
 
 message JoinLobbyResponse {
-    LobbyInfo lobby = 1;
+	LobbyInfo lobby = 1;
 }
 
 message Player {
-  string ip = 1;
-  int32 port = 2;
-  string name = 3;
+	string ip = 1;
+	int32 port = 2;
+	string name = 3;
 }
 
 message LobbyInfo {
-  string id = 1;
-  repeated Player players = 2;
+	string id = 1;
+	repeated Player players = 2;
 }

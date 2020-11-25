@@ -16,16 +16,12 @@ message GetLobbiesResponse {
 }
 
 message CreateLobbyRequest {
-  string playerName = 1;
-  string ip = 2;
-  int32 port = 3;
+  Player player = 1;
 }
 
 message JoinLobbyRequest {
-  string playerName = 1;
-  string ip = 2;
-  int32 port = 3;
-  string lobbyId = 4;
+  string lobbyId = 1;
+  Player player = 2;
 }
 
 message JoinLobbyResponse {

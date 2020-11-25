@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using RegistrationServer.Spread.Interface;
 using RegistrationServer.Proto;
 using System.Collections.Generic;
+using System.Linq;
 using System;
 
 namespace RegistrationServer
@@ -28,7 +29,6 @@ namespace RegistrationServer
             {
                 response.Lobbies.Add(lobby);
             }
-
             return Task.FromResult(response);
         }
 
@@ -39,13 +39,7 @@ namespace RegistrationServer
             {
                 Id = Guid.NewGuid().ToString(),
             };
-            var player = new Player
-            {
-                Ip = request.Ip, 
-                Port = request.Port, 
-                Name = request.PlayerName,
-            };
-            lobbyInfo.Players.Add(player);
+            lobbyInfo.Players.Add(request.Player);
             lobbies.Add(lobbyInfo);
             response.Lobby = lobbyInfo;
             return Task.FromResult(response);
@@ -54,7 +48,10 @@ namespace RegistrationServer
         public override Task<JoinLobbyResponse> JoinLobby(JoinLobbyRequest request, ServerCallContext context)
         {
             var response = new JoinLobbyResponse();
-            spreadConn.SendMessage($"New Player: {request.PlayerName}");
+            var lobbyToJoin = lobbies.Single(l => l.Id == request.LobbyId);
+            lobbyToJoin.Players.Add(request.Player);
+            spreadConn.SendMessage($"New Player: {request.Player.Name}");
+            response.Lobby = lobbyToJoin;
             return Task.FromResult(response);
         }
     }

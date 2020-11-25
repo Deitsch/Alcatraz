@@ -58,9 +58,14 @@ namespace GrpcClient
                         CreateLobby(playerName);
                         break;
                     case "3":
-                        Console.WriteLine("not implemented");
+                        Console.Write("Player Name: ");
+                        var pName = Console.ReadLine();
+                        Console.Write("LobbyId: ");
+                        var lobbyId = Console.ReadLine();
+                        JoinLobby(lobbyId, pName);
                         break;
                     default:
+                        Console.WriteLine("Invalid input");
                         break;
                 }
                 Console.Write("Input: ");
@@ -73,14 +78,41 @@ namespace GrpcClient
             var reply = client.GetLobbies(new GetLobbiesRequest());
             foreach (var lobby in reply.Lobbies)
             {
-                Console.WriteLine($"LobbyId: {lobby.Id} Players: {string.Join(", ", lobby.Players.Select(x => x.Name))}");
+                Console.WriteLine($"LobbyId: {lobby.Id} Players in Lobby: {lobby.Players.Count} PlayerNames: {string.Join(", ", lobby.Players.Select(x => x.Name))}");
             }
         }
 
         private static void CreateLobby(string playerName) 
         {
-            var reply = client.CreateLobby(new CreateLobbyRequest { Ip = "127.0.0.1", Port = 5001, PlayerName = playerName });
-            Console.WriteLine($"You created and joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ",reply.Lobby.Players.Select(x => x.Name))}");
+            try
+            {
+                var player = new Player
+                {
+                    Ip = "127.0.0.1",
+                    Port = 5001,
+                    Name = playerName
+                };
+                var reply = client.CreateLobby(new CreateLobbyRequest { Player = player });
+                Console.WriteLine($"You created and joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ", reply.Lobby.Players.Select(x => x.Name))}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
+
+        }
+
+        private static void JoinLobby(string lobbyId, string playerName)
+        {
+            var player = new Player
+            {
+                Ip = "127.0.0.1",
+                Port = 5001,
+                Name = playerName
+            };
+            var reply = client.JoinLobby(new JoinLobbyRequest {LobbyId = lobbyId, Player = player});
+            Console.WriteLine($"You joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ", reply.Lobby.Players.Select(x => x.Name))}");
         }
 
 
