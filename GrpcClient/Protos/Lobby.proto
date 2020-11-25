@@ -3,9 +3,10 @@ syntax = "proto3";
 option csharp_namespace = "GrpcClient.Proto";
 
 service Lobby {
-  rpc CreateLobby (CreateLobbyRequest) returns (JoinLobbyResponse);
-  rpc GetLobbies (GetLobbiesRequest) returns (GetLobbiesResponse);
-  rpc JoinLobby (JoinLobbyRequest) returns (JoinLobbyResponse);
+	rpc CreateLobby (CreateLobbyRequest) returns (JoinLobbyResponse);
+	rpc GetLobbies (GetLobbiesRequest) returns (GetLobbiesResponse);
+	rpc JoinLobby (JoinLobbyRequest) returns (JoinLobbyResponse);
+	rpc LeaveLobby (LeaveLobbyRequest) returns (LeaveLobbyResponse);
 }
 
 message GetLobbiesRequest {
@@ -26,6 +27,14 @@ message JoinLobbyRequest {
 
 message JoinLobbyResponse {
 	LobbyInfo lobby = 1;
+}
+
+message LeaveLobbyRequest {
+	string lobbyId = 1;
+	Player player = 2;
+}
+
+message LeaveLobbyResponse {
 }
 
 message Player {

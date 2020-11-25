@@ -18,9 +18,11 @@ namespace GrpcClient
                                 $"1. Get Lobbies{Environment.NewLine}"+
                                 $"2. Create Lobby{Environment.NewLine}"+
                                 $"3. Join Lobby{Environment.NewLine}"+
-                                $"4. Exit";
+                                $"4. Leave Lobby{Environment.NewLine}"+
+                                $"5. Exit";
 
         private static Lobby.LobbyClient client;
+        private static Player player;
 
         public static async Task Main(string[] args)
         {
@@ -28,6 +30,16 @@ namespace GrpcClient
             // The port number(5001) must match the port of the gRPC server.
             using var channel = GrpcChannel.ForAddress("http://localhost:5001");
             client = new Lobby.LobbyClient(channel);
+
+            Console.Write("Enter Player Name: ");
+            var playerName = Console.ReadLine();
+            player = new Player
+            {
+                Ip = "127.0.0.1",
+                Port = 5001,
+                Name = playerName
+            };
+
             Console.WriteLine(helpText);
 
             HandleUserInput();
@@ -42,7 +54,7 @@ namespace GrpcClient
         {
             Console.Write("Input: ");
             var userInput = Console.ReadLine();
-            while (userInput != "4")
+            while (userInput != "5")
             {
                 switch (userInput)
                 {
@@ -53,16 +65,17 @@ namespace GrpcClient
                         GetLobbies();
                         break;
                     case "2":
-                        Console.Write("Player Name: ");
-                        var playerName = Console.ReadLine();
-                        CreateLobby(playerName);
+                        CreateLobby(player);
                         break;
                     case "3":
-                        Console.Write("Player Name: ");
-                        var pName = Console.ReadLine();
                         Console.Write("LobbyId: ");
                         var lobbyId = Console.ReadLine();
-                        JoinLobby(lobbyId, pName);
+                        JoinLobby(lobbyId, player);
+                        break;
+                    case "4":
+                        Console.Write("LobbyId: ");
+                        var lobId = Console.ReadLine();
+                        LeaveLobby(lobId, player);
                         break;
                     default:
                         Console.WriteLine("Invalid input");
@@ -71,6 +84,12 @@ namespace GrpcClient
                 Console.Write("Input: ");
                 userInput = Console.ReadLine();
             }
+        }
+
+        private static void LeaveLobby(string lobbyId, Player player)
+        {
+            var reply = client.LeaveLobby(new LeaveLobbyRequest {LobbyId = lobbyId, Player = player});
+            Console.WriteLine("You left lobby");
         }
 
         private static void GetLobbies() 
@@ -82,16 +101,10 @@ namespace GrpcClient
             }
         }
 
-        private static void CreateLobby(string playerName) 
+        private static void CreateLobby(Player player) 
         {
             try
             {
-                var player = new Player
-                {
-                    Ip = "127.0.0.1",
-                    Port = 5001,
-                    Name = playerName
-                };
                 var reply = client.CreateLobby(new CreateLobbyRequest { Player = player });
                 Console.WriteLine($"You created and joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ", reply.Lobby.Players.Select(x => x.Name))}");
             }
@@ -103,14 +116,8 @@ namespace GrpcClient
 
         }
 
-        private static void JoinLobby(string lobbyId, string playerName)
+        private static void JoinLobby(string lobbyId, Player player)
         {
-            var player = new Player
-            {
-                Ip = "127.0.0.1",
-                Port = 5001,
-                Name = playerName
-            };
             var reply = client.JoinLobby(new JoinLobbyRequest {LobbyId = lobbyId, Player = player});
             Console.WriteLine($"You joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ", reply.Lobby.Players.Select(x => x.Name))}");
         }

@@ -54,5 +54,15 @@ namespace RegistrationServer
             response.Lobby = lobbyToJoin;
             return Task.FromResult(response);
         }
+
+        public override Task<LeaveLobbyResponse> LeaveLobby(LeaveLobbyRequest request, ServerCallContext context)
+        {
+            var response = new LeaveLobbyResponse();
+            var lobbyToLeave = lobbies.Single(l => l.Id == request.LobbyId);
+            lobbyToLeave.Players.Remove(request.Player);
+            return Task.FromResult(response);
+        }
+
+
     }
 }
