@@ -1,6 +1,6 @@
 using Grpc.Core;
 using Grpc.Net.Client;
-using GrpcClient.Proto;
+using GrpcClient.Lobby.Proto;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using System;
@@ -20,7 +20,7 @@ namespace GrpcClient
                                 $"leave -> Leave Lobby{Environment.NewLine}"+
                                 $"exit -> Exit";
 
-        private static Lobby.LobbyClient client;
+        private static Lobby.Proto.Lobby.LobbyClient lobbyClient;
         private static Player player;
         private static string currentLobbyId;
         private static bool playerIsInLobby => currentLobbyId != null;
@@ -36,7 +36,7 @@ namespace GrpcClient
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             // The port number(5001) must match the port of the gRPC server.
             using var channel = GrpcChannel.ForAddress("http://localhost:5001");
-            client = new Lobby.LobbyClient(channel);
+            lobbyClient = new Lobby.Proto.Lobby.LobbyClient(channel);
 
             Console.WriteLine($"args: {string.Join(",",args)}");
             Console.Write("Enter Player Name: ");
@@ -99,7 +99,7 @@ namespace GrpcClient
             {
                 if (playerIsInLobby)
                 {
-                    var reply = client.LeaveLobby(new LeaveLobbyRequest {LobbyId = lobbyId, Player = player});
+                    var reply = lobbyClient.LeaveLobby(new LeaveLobbyRequest {LobbyId = lobbyId, Player = player});
                     currentLobbyId = null;
                     Console.WriteLine("You left lobby");
                 }
@@ -121,7 +121,7 @@ namespace GrpcClient
 
         private static void GetLobbies() 
         {
-            var reply = client.GetLobbies(new GetLobbiesRequest());
+            var reply = lobbyClient.GetLobbies(new GetLobbiesRequest());
             foreach (var lobby in reply.Lobbies)
             {
                 Console.WriteLine($"LobbyId: {lobby.Id} Players in Lobby: {lobby.Players.Count} PlayerNames: {string.Join(", ", lobby.Players.Select(x => x.Name))}");
@@ -134,7 +134,7 @@ namespace GrpcClient
             {
                 if (!playerIsInLobby)
                 {
-                    var reply = client.CreateLobby(new CreateLobbyRequest {Player = player});
+                    var reply = lobbyClient.CreateLobby(new CreateLobbyRequest {Player = player});
                     currentLobbyId = reply.Lobby.Id;
                     Console.WriteLine(
                         $"You created and joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ", reply.Lobby.Players.Select(x => x.Name))}");
@@ -161,7 +161,7 @@ namespace GrpcClient
             {
                 if (!playerIsInLobby)
                 {
-                    var reply = client.JoinLobby(new JoinLobbyRequest {LobbyId = lobbyId, Player = player});
+                    var reply = lobbyClient.JoinLobby(new JoinLobbyRequest {LobbyId = lobbyId, Player = player});
                     currentLobbyId = reply.Lobby.Id;
                     Console.WriteLine(
                         $"You joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ", reply.Lobby.Players.Select(x => x.Name))}");

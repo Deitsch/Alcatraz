@@ -1,15 +1,15 @@
-using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
+using RegistrationServer.Lobby.Proto;
 using RegistrationServer.Spread.Interface;
-using RegistrationServer.Proto;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System;
+using System.Threading.Tasks;
 
 namespace RegistrationServer
 {
-    public class LobbyService : Lobby.LobbyBase
+    public class LobbyService : Lobby.Proto.Lobby.LobbyBase
     {
         private readonly ILogger<LobbyService> _logger;
         private readonly ISpreadConn spreadConn;
