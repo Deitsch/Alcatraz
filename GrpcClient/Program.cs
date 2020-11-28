@@ -18,9 +18,11 @@ namespace GrpcClient
                                 $"create -> Create Lobby{Environment.NewLine}"+
                                 $"join -> Join Lobby{Environment.NewLine}"+
                                 $"leave -> Leave Lobby{Environment.NewLine}"+
+                                $"start -> Start Game{Environment.NewLine}"+
                                 $"exit -> Exit";
 
         private static Lobby.Proto.Lobby.LobbyClient lobbyClient;
+        private static Game.Proto.Game.GameClient gameClient;
         private static Player player;
         private static string currentLobbyId;
         private static bool playerIsInLobby => currentLobbyId != null;
@@ -37,7 +39,7 @@ namespace GrpcClient
             // The port number(5001) must match the port of the gRPC server.
             using var channel = GrpcChannel.ForAddress("http://localhost:5001");
             lobbyClient = new Lobby.Proto.Lobby.LobbyClient(channel);
-
+            gameClient = new Game.Proto.Game.GameClient(channel);
             Console.WriteLine($"args: {string.Join(",",args)}");
             Console.Write("Enter Player Name: ");
             var playerName = Console.ReadLine();
@@ -80,9 +82,10 @@ namespace GrpcClient
                         JoinLobby(lobbyId, player);
                         break;
                     case "leave":
-                        Console.Write("LobbyId: ");
-                        var lobId = Console.ReadLine();
-                        LeaveLobby(lobId, player);
+                        LeaveLobby(currentLobbyId, player);
+                        break;
+                    case "start":
+                        StartGame(currentLobbyId);
                         break;
                     default:
                         Console.WriteLine("Invalid input");
@@ -91,6 +94,11 @@ namespace GrpcClient
                 Console.Write("Input: ");
                 userInput = Console.ReadLine();
             }
+        }
+
+        private static void StartGame(string lobbyId)
+        {
+            gameClient.RequestGameStart(new Game.Proto.RequestGameStartRequest {LobbyId = lobbyId});
         }
 
         private static void LeaveLobby(string lobbyId, Player player)

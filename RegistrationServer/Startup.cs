@@ -21,6 +21,7 @@ namespace RegistrationServer
             services.AddGrpc();
             services.AddSingleton<ISpreadConn, SpreadConn>();
             services.AddSingleton<LobbyService>();
+            services.AddSingleton<GameService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -36,6 +37,7 @@ namespace RegistrationServer
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGrpcService<LobbyService>();
+                endpoints.MapGrpcService<GameService>();
 
                 endpoints.MapGet("/", async context =>
                 {

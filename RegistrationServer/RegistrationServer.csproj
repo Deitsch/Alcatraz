@@ -3,8 +3,13 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
+
   <ItemGroup>
-    <Protobuf Include="Protos\Lobby.proto" GrpcServices="Server" />
+    <None Remove="Protos\game.proto" />
+  </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="Protos\game.proto" GrpcServices="Both" />
+    <Protobuf Include="Protos\lobby.proto" GrpcServices="Both" />
   </ItemGroup>
 
   <ItemGroup>

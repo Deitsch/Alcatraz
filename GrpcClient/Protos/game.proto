@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option csharp_namespace = "GrpcClient.Game.Proto";
+
+service Game {
+	// client asks server to start game
+	rpc RequestGameStart (RequestGameStartRequest) returns (RequestGameStartResponse);
+	//server initializes game on every client
+	rpc StartGame (StartGameRequest) returns (StartGameResonse);
+}
+
+message RequestGameStartRequest{
+	string lobbyId = 1;
+}
+
+message RequestGameStartResponse{
+}
+
+message StartGameRequest{
+	GameInfo gameInfo = 1;
+}
+
+message StartGameResonse{
+}
+
+message Player {
+	string ip = 1;
+	int32 port = 2;
+	string name = 3;
+}
+
+message GameInfo {
+	string id = 1;
+	repeated Player players = 2;
+}

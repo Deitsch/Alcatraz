@@ -13,19 +13,19 @@ namespace RegistrationServer
     {
         private readonly ILogger<LobbyService> _logger;
         private readonly ISpreadConn spreadConn;
-        private readonly List<LobbyInfo> lobbies;
+        public List<LobbyInfo> Lobbies;
 
         public LobbyService(ILogger<LobbyService> logger, ISpreadConn spreadConn)
         {
             _logger = logger;
             this.spreadConn = spreadConn;
-            lobbies = new List<LobbyInfo>();
+            Lobbies = new List<LobbyInfo>();
         }
 
         public override Task<GetLobbiesResponse> GetLobbies(GetLobbiesRequest request, ServerCallContext context)
         {
             var response = new GetLobbiesResponse();
-            foreach (var lobby in lobbies)
+            foreach (var lobby in Lobbies)
             {
                 response.Lobbies.Add(lobby);
             }
@@ -40,7 +40,7 @@ namespace RegistrationServer
                 Id = Guid.NewGuid().ToString(),
             };
             lobbyInfo.Players.Add(request.Player);
-            lobbies.Add(lobbyInfo);
+            Lobbies.Add(lobbyInfo);
             response.Lobby = lobbyInfo;
             return Task.FromResult(response);
         }
@@ -48,7 +48,7 @@ namespace RegistrationServer
         public override Task<JoinLobbyResponse> JoinLobby(JoinLobbyRequest request, ServerCallContext context)
         {
             var response = new JoinLobbyResponse();
-            var lobbyToJoin = lobbies.Single(l => l.Id == request.LobbyId);
+            var lobbyToJoin = Lobbies.Single(l => l.Id == request.LobbyId);
             if (lobbyToJoin == null)
             {
                 throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
@@ -74,7 +74,7 @@ namespace RegistrationServer
         public override Task<LeaveLobbyResponse> LeaveLobby(LeaveLobbyRequest request, ServerCallContext context)
         {
             var response = new LeaveLobbyResponse();
-            var lobbyToLeave = lobbies.SingleOrDefault(l => l.Id == request.LobbyId);
+            var lobbyToLeave = Lobbies.SingleOrDefault(l => l.Id == request.LobbyId);
             if (lobbyToLeave == null)
             {
                 throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
@@ -88,7 +88,7 @@ namespace RegistrationServer
 
             if (lobbyToLeave.Players.Count == 0)
             {
-                lobbies.Remove(lobbyToLeave);
+                Lobbies.Remove(lobbyToLeave);
             }
             return Task.FromResult(response);
         }
