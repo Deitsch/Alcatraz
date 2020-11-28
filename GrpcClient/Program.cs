@@ -93,7 +93,19 @@ namespace GrpcClient
 
         private static void LeaveLobby(string lobbyId, Player player)
         {
-            var reply = client.LeaveLobby(new LeaveLobbyRequest {LobbyId = lobbyId, Player = player});
+            try
+            {
+                var reply = client.LeaveLobby(new LeaveLobbyRequest {LobbyId = lobbyId, Player = player});
+            }
+            catch (RpcException rpcException)
+            {
+                Console.WriteLine($"ERROR: {rpcException.StatusCode} {rpcException.Message}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
             Console.WriteLine("You left lobby");
         }
 
@@ -114,16 +126,15 @@ namespace GrpcClient
                 Console.WriteLine(
                     $"You created and joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ", reply.Lobby.Players.Select(x => x.Name))}");
             }
-            catch (RpcException e)
+            catch (RpcException rpcException)
             {
-                Console.WriteLine($"ERROR: {e.StatusCode} {e.Message}");
+                Console.WriteLine($"ERROR: {rpcException.StatusCode} {rpcException.Message}");
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
                 throw;
             }
-
         }
 
         private static void JoinLobby(string lobbyId, Player player)
@@ -132,6 +143,10 @@ namespace GrpcClient
             {
                 var reply = client.JoinLobby(new JoinLobbyRequest {LobbyId = lobbyId, Player = player});
                 Console.WriteLine($"You joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ", reply.Lobby.Players.Select(x => x.Name))}");
+            }
+            catch (RpcException rpcException)
+            {
+                Console.WriteLine($"ERROR: {rpcException.StatusCode} {rpcException.Message}");
             }
             catch (Exception e)
             {

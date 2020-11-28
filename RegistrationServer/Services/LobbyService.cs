@@ -49,11 +49,21 @@ namespace RegistrationServer
         {
             var response = new JoinLobbyResponse();
             var lobbyToJoin = lobbies.Single(l => l.Id == request.LobbyId);
-            var playerNameExists = lobbyToJoin.Players.Any(p => p.Name == request.Player.Name);
-            if (playerNameExists)
+            if (lobbyToJoin == null)
+            {
+                throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
+            }
+
+            if (lobbyToJoin.Players.Any(p => p.Name == request.Player.Name))
             {
                 throw new RpcException(new Status(StatusCode.AlreadyExists,
                     $"A player with that name is already in lobby {lobbyToJoin.Id}"));
+            }
+
+            if (lobbyToJoin.Players.Count == 4)
+            {
+                throw new RpcException(new Status(StatusCode.FailedPrecondition,
+                    $"Lobby with id {lobbyToJoin.Id} is already full"));
             }
             lobbyToJoin.Players.Add(request.Player);
             spreadConn.SendMessage($"New Player: {request.Player.Name}");
@@ -64,8 +74,22 @@ namespace RegistrationServer
         public override Task<LeaveLobbyResponse> LeaveLobby(LeaveLobbyRequest request, ServerCallContext context)
         {
             var response = new LeaveLobbyResponse();
-            var lobbyToLeave = lobbies.Single(l => l.Id == request.LobbyId);
-            lobbyToLeave.Players.Remove(request.Player);
+            var lobbyToLeave = lobbies.SingleOrDefault(l => l.Id == request.LobbyId);
+            if (lobbyToLeave == null)
+            {
+                throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
+            }
+
+            if (!lobbyToLeave.Players.Remove(request.Player))
+            {
+                throw new RpcException(new Status(StatusCode.NotFound,
+                    $"Player {request.Player.Name} not found in Lobby {request.LobbyId}"));
+            }
+
+            if (lobbyToLeave.Players.Count == 0)
+            {
+                lobbies.Remove(lobbyToLeave);
+            }
             return Task.FromResult(response);
         }
     }
