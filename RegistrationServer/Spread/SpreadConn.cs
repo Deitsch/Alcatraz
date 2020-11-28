@@ -104,36 +104,45 @@ namespace RegistrationServer.Spread
 
 		private void HandleMessage(SpreadMessage message)
         {
+			// custom multicasts messages don't have a membership info set by default
 			if (message.IsMembership)
+				HandleDefaultMessages(message);
+			else
+				HandleCustomMessages(message);
+		}
+
+		private void HandleDefaultMessages(SpreadMessage message)
+		{
+			Console.WriteLine("Default Message Recieved");
+			MembershipInfo info = message.MembershipInfo;
+			UpdateList(info.Members);
+			if (info.IsCausedByJoin)
 			{
-				MembershipInfo info = message.MembershipInfo;
-				UpdateList(info.Members);
-				if (info.IsCausedByJoin)
-                {
-					if (isPrimary)
-						MulticastIamPrimaryMessage();
+				if (isPrimary)
+					MulticastIamPrimaryMessage();
 
-					if (info.Members.Length == 1)
-						primaryName = userName;
+				if (info.Members.Length == 1)
+					primaryName = userName;
 
-                }
-				else if (info.IsCausedByLeave || info.IsCausedByDisconnect)
-                {
-					if (PrimaryLeft && IAmNewPrimary())
-					{
-						MulticastIamPrimaryMessage();
-					}
-                }
 			}
-			else // custom messages don't have a membership info set by default
-            {
-				string messageText = decode(message.Data);
+			else if (info.IsCausedByLeave || info.IsCausedByDisconnect)
+			{
+				if (PrimaryLeft && IAmNewPrimary())
+				{
+					MulticastIamPrimaryMessage();
+				}
+			}
+		}
 
-				if (messageText.StartsWith(primaryMessagePrefix))
-                {
-					primaryName = messageText.Substring(primaryMessagePrefix.Length);
-                }
-            }
+		private void HandleCustomMessages(SpreadMessage message)
+        {
+			Console.WriteLine("Custom Message Recieved");
+			string messageText = decode(message.Data);
+			if (messageText.StartsWith(primaryMessagePrefix))
+			{
+				primaryName = messageText.Substring(primaryMessagePrefix.Length);
+				Console.WriteLine("New Primary was set: " + primaryName);
+			}
 		}
 
 		private bool IAmNewPrimary()
