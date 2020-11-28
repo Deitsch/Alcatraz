@@ -69,7 +69,7 @@ namespace GrpcClient
 
         private void StartGame(string lobbyId)
         {
-            //gameClient.RequestGameStart(new Game.Proto.RequestGameStartRequest { LobbyId = lobbyId });
+            lobbyClient.RequestGameStart(new RequestGameStartRequest { LobbyId = lobbyId });
         }
 
         private void LeaveLobby(string lobbyId, Player player)

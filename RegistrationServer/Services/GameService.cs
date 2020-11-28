@@ -1,13 +1,9 @@
-using System;
-using Grpc.Core;
+using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using RegistrationServer.Game.Proto;
 using RegistrationServer.Lobby.Proto;
 using RegistrationServer.Spread.Interface;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
-using Grpc.Net.Client;
+using System;
 
 namespace RegistrationServer
 {
@@ -25,22 +21,6 @@ namespace RegistrationServer
             this.spreadConn = spreadConn;
         }
 
-        public override Task<RequestGameStartResponse> RequestGameStart(RequestGameStartRequest request, ServerCallContext context)
-        {
-            var lobby = LobbyService.Lobbies.SingleOrDefault(l => l.Id == request.LobbyId);
-            if (lobby == null)
-            {
-                throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
-            }
-
-            if (lobby.Players.Count < 2)
-            {
-                throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Lobby with id {lobby.Id} has not enough players to start"));
-            }
-
-            StartGame(lobby);
-            return Task.FromResult(new RequestGameStartResponse());
-        }
 
         private void StartGame(LobbyInfo lobby)
         {

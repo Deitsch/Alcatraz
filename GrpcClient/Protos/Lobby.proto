@@ -7,13 +7,14 @@ service Lobby {
 	rpc GetLobbies (GetLobbiesRequest) returns (GetLobbiesResponse);
 	rpc JoinLobby (JoinLobbyRequest) returns (JoinLobbyResponse);
 	rpc LeaveLobby (LeaveLobbyRequest) returns (LeaveLobbyResponse);
+	rpc RequestGameStart (RequestGameStartRequest) returns (RequestGameStartResponse);
 }
 
 message GetLobbiesRequest {
 }
 
 message GetLobbiesResponse {
-	repeated LobbyInfo lobbies = 1;
+	repeated LobbyInfo Lobbies = 1;
 }
 
 message CreateLobbyRequest {
@@ -35,6 +36,13 @@ message LeaveLobbyRequest {
 }
 
 message LeaveLobbyResponse {
+}
+
+message RequestGameStartRequest{
+	string lobbyId = 1;
+}
+
+message RequestGameStartResponse{
 }
 
 message Player {

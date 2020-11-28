@@ -13,19 +13,19 @@ namespace RegistrationServer
     {
         private readonly ILogger<LobbyService> _logger;
         private readonly ISpreadConn spreadConn;
-        public List<LobbyInfo> Lobbies;
+        private readonly List<LobbyInfo> _lobbies;
 
         public LobbyService(ILogger<LobbyService> logger, ISpreadConn spreadConn)
         {
             _logger = logger;
             this.spreadConn = spreadConn;
-            Lobbies = new List<LobbyInfo>();
+            _lobbies = new List<LobbyInfo>();
         }
 
         public override Task<GetLobbiesResponse> GetLobbies(GetLobbiesRequest request, ServerCallContext context)
         {
             var response = new GetLobbiesResponse();
-            foreach (var lobby in Lobbies)
+            foreach (var lobby in _lobbies)
             {
                 response.Lobbies.Add(lobby);
             }
@@ -40,7 +40,7 @@ namespace RegistrationServer
                 Id = Guid.NewGuid().ToString(),
             };
             lobbyInfo.Players.Add(request.Player);
-            Lobbies.Add(lobbyInfo);
+            _lobbies.Add(lobbyInfo);
             response.Lobby = lobbyInfo;
             return Task.FromResult(response);
         }
@@ -48,7 +48,7 @@ namespace RegistrationServer
         public override Task<JoinLobbyResponse> JoinLobby(JoinLobbyRequest request, ServerCallContext context)
         {
             var response = new JoinLobbyResponse();
-            var lobbyToJoin = Lobbies.Single(l => l.Id == request.LobbyId);
+            var lobbyToJoin = _lobbies.Single(l => l.Id == request.LobbyId);
             if (lobbyToJoin == null)
             {
                 throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
@@ -74,7 +74,7 @@ namespace RegistrationServer
         public override Task<LeaveLobbyResponse> LeaveLobby(LeaveLobbyRequest request, ServerCallContext context)
         {
             var response = new LeaveLobbyResponse();
-            var lobbyToLeave = Lobbies.SingleOrDefault(l => l.Id == request.LobbyId);
+            var lobbyToLeave = _lobbies.SingleOrDefault(l => l.Id == request.LobbyId);
             if (lobbyToLeave == null)
             {
                 throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
@@ -88,9 +88,26 @@ namespace RegistrationServer
 
             if (lobbyToLeave.Players.Count == 0)
             {
-                Lobbies.Remove(lobbyToLeave);
+                _lobbies.Remove(lobbyToLeave);
             }
             return Task.FromResult(response);
+        }
+
+        public override Task<RequestGameStartResponse> RequestGameStart(RequestGameStartRequest request, ServerCallContext context)
+        {
+            var lobby = _lobbies.SingleOrDefault(l => l.Id == request.LobbyId);
+            if (lobby == null)
+            {
+                throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
+            }
+
+            if (lobby.Players.Count < 2)
+            {
+                throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Lobby with id {lobby.Id} has not enough players to start"));
+            }
+
+            //StartGame(lobby);
+            return Task.FromResult(new RequestGameStartResponse());
         }
     }
 }

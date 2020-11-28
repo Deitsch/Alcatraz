@@ -37,8 +37,7 @@ namespace GrpcClient
                 Port = Convert.ToInt32(port),
                 Name = playerName
             };
-
-
+            
             _lobbyHandler = new LobbyHandler(channel, player);
             _lobbyHandler.HandleUserInput();
 
