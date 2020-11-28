@@ -22,6 +22,8 @@ namespace GrpcClient
 
         private static Lobby.LobbyClient client;
         private static Player player;
+        private static string currentLobbyId;
+        private static bool playerIsInLobby => currentLobbyId != null;
 
         public static async Task Main(string[] args)
         {
@@ -36,7 +38,7 @@ namespace GrpcClient
             using var channel = GrpcChannel.ForAddress("http://localhost:5001");
             client = new Lobby.LobbyClient(channel);
 
-            Console.WriteLine(string.Join(",",args));
+            Console.WriteLine($"args: {string.Join(",",args)}");
             Console.Write("Enter Player Name: ");
             var playerName = Console.ReadLine();
             player = new Player
@@ -95,7 +97,16 @@ namespace GrpcClient
         {
             try
             {
-                var reply = client.LeaveLobby(new LeaveLobbyRequest {LobbyId = lobbyId, Player = player});
+                if (playerIsInLobby)
+                {
+                    var reply = client.LeaveLobby(new LeaveLobbyRequest {LobbyId = lobbyId, Player = player});
+                    currentLobbyId = null;
+                    Console.WriteLine("You left lobby");
+                }
+                else
+                {
+                    Console.WriteLine("You are not in a lobby");
+                }
             }
             catch (RpcException rpcException)
             {
@@ -106,7 +117,6 @@ namespace GrpcClient
                 Console.WriteLine(e);
                 throw;
             }
-            Console.WriteLine("You left lobby");
         }
 
         private static void GetLobbies() 
@@ -122,9 +132,17 @@ namespace GrpcClient
         {
             try
             {
-                var reply = client.CreateLobby(new CreateLobbyRequest {Player = player});
-                Console.WriteLine(
-                    $"You created and joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ", reply.Lobby.Players.Select(x => x.Name))}");
+                if (!playerIsInLobby)
+                {
+                    var reply = client.CreateLobby(new CreateLobbyRequest {Player = player});
+                    currentLobbyId = reply.Lobby.Id;
+                    Console.WriteLine(
+                        $"You created and joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ", reply.Lobby.Players.Select(x => x.Name))}");
+                }
+                else
+                {
+                    Console.WriteLine("You are already in a lobby");
+                }
             }
             catch (RpcException rpcException)
             {
@@ -141,8 +159,17 @@ namespace GrpcClient
         {
             try
             {
-                var reply = client.JoinLobby(new JoinLobbyRequest {LobbyId = lobbyId, Player = player});
-                Console.WriteLine($"You joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ", reply.Lobby.Players.Select(x => x.Name))}");
+                if (!playerIsInLobby)
+                {
+                    var reply = client.JoinLobby(new JoinLobbyRequest {LobbyId = lobbyId, Player = player});
+                    currentLobbyId = reply.Lobby.Id;
+                    Console.WriteLine(
+                        $"You joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ", reply.Lobby.Players.Select(x => x.Name))}");
+                }
+                else
+                {
+                    Console.WriteLine("You are already in a lobby");
+                }
             }
             catch (RpcException rpcException)
             {
