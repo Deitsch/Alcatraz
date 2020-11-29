@@ -1,13 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
-using RegistrationServer.Spread;
-using spread;
 
 namespace RegistrationServer
 {
@@ -20,9 +13,9 @@ namespace RegistrationServer
             var webHost = CreateHostBuilder(args, port).Build();
             webHost.Start();
 
-            SpreadConn spread = new SpreadConn();
-            spread.Connect(ConfigFile.SPREAD_ADDRESS, ConfigFile.SPREAD_PORT, Guid.NewGuid().ToString(), ConfigFile.SPREAD_PRIORITY, ConfigFile.SPREAD_GROUP_MEMBERSHIP);
-            spread.Run();
+            //SpreadConn spread = new SpreadConn();
+            //spread.Connect(ConfigFile.SPREAD_ADDRESS, ConfigFile.SPREAD_PORT, Guid.NewGuid().ToString(), ConfigFile.SPREAD_PRIORITY, ConfigFile.SPREAD_GROUP_MEMBERSHIP);
+            //spread.Run();
 
             webHost.WaitForShutdown();
 

@@ -1,23 +1,32 @@
-﻿using RegistrationServer.Spread.Interface;
+﻿using RegistrationServer.Listener;
+using RegistrationServer.Proto;
+using RegistrationServer.Repositories;
+using RegistrationServer.Spread.Interface;
 using spread;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 
 namespace RegistrationServer.Spread
 {
-    public class SpreadConn : ISpreadConn
-    {
-		private static string primaryMessagePrefix = "I am new boban:";
+	public class SpreadConnection : ISpreadConnection
+	{
+		//private static string primaryMessagePrefix = "I am new boban:";
 
-		SpreadConnection spreadConnection { get; }
-        SpreadGroup spreadGroup { get; set; }
+		public spread.SpreadConnection spreadConnection { get; }
+		SpreadGroup spreadGroup { get; }
 
 		List<string> groupMembers = new List<string>();
 
-        private bool isPrimary
+		public int GroupMemberCounter { get => groupMembers.Count; }
+
+        public bool IsPrimary
         {
 			get => primaryName == userName;
         }
@@ -26,14 +35,20 @@ namespace RegistrationServer.Spread
 
 		private string primaryName;
 
-		private string userName;
+		public string userName;
 
-        public SpreadConn()
-        {
+        private readonly LobbyRepository _lobbyRepository;
+
+		private MessageListener messageListener;
+
+        public SpreadConnection(LobbyRepository lobbyRepository)
+		{ 
             try
             {
-                spreadConnection = new SpreadConnection();
-            }
+                spreadConnection = new spread.SpreadConnection();
+				messageListener = new MessageListener(spreadConnection);
+
+			}
             catch (SpreadException e)
             {
                 Console.Error.WriteLine("There was an error connecting to the daemon.");
@@ -46,6 +61,8 @@ namespace RegistrationServer.Spread
                 Console.WriteLine(e);
                 Environment.Exit(1);
             }
+
+            _lobbyRepository = lobbyRepository;
         }
 
         //Parameter user must be unique!
@@ -75,14 +92,18 @@ namespace RegistrationServer.Spread
 
         public void Run()
         {
-            while (true)
+			Test();
+
+			while (true)
             {
                 try
                 {
-                    SpreadMessage msg = spreadConnection.Receive();
-                    DisplayMessage(msg);
-					var thread = new Thread(() => HandleMessage(msg));
-					thread.Start();
+
+					messageListener.Receive += (sender, e) => DisplayMessage(e.Message);
+					messageListener.Listen();
+                    //DisplayMessage(msg);
+					//var thread = new Thread(() => HandleMessage(msg));
+					//thread.Start();
 
 					if (threadSuspended)
                     {
@@ -102,14 +123,10 @@ namespace RegistrationServer.Spread
             }
         }
 
-		private void HandleMessage(SpreadMessage message)
+		private void Test()
         {
-			// custom multicasts messages don't have a membership info set by default
-			if (message.IsMembership)
-				HandleDefaultMessages(message);
-			else
-				HandleCustomMessages(message);
-		}
+			messageListener.Receive += (sender, e) => DisplayMessage(e.Message);
+        }
 
 		private void HandleDefaultMessages(SpreadMessage message)
 		{
@@ -118,7 +135,7 @@ namespace RegistrationServer.Spread
 			UpdateList(info.Members);
 			if (info.IsCausedByJoin)
 			{
-				if (isPrimary)
+				if (IsPrimary)
 					MulticastIamPrimaryMessage();
 
 				if (info.Members.Length == 1)
@@ -134,76 +151,90 @@ namespace RegistrationServer.Spread
 			}
 		}
 
-		private void HandleCustomMessages(SpreadMessage message)
-        {
-			Console.WriteLine("Custom Message Recieved");
-			string messageText = decode(message.Data);
-			if (messageText.StartsWith(primaryMessagePrefix))
-			{
-				primaryName = messageText.Substring(primaryMessagePrefix.Length);
-				Console.WriteLine("New Primary was set: " + primaryName);
-			}
+		private bool IAmNewPrimary()
+		{
+			return userName == groupMembers.Max();
 		}
 
-		private bool IAmNewPrimary()
-        {
-			return userName == groupMembers.Max();				
-        } 
+		private bool PrimaryLeft
+		{
+			get => !groupMembers.Contains(primaryName);
+		}
 
 		private void UpdateList(SpreadGroup[] actualMembers)
-        {
+		{
 			groupMembers.Clear();
-			groupMembers.AddRange(actualMembers.Select(m => m.ToString().Trim('#').Substring(0,8)));
+			groupMembers.AddRange(actualMembers.Select(m => m.ToString().Trim('#').Substring(0, 8)));
+		}
+
+        private bool getAcknForCreateLobby(LobbyInfo lobbyInfo)
+        {
+			acknowledgements.Add(lobbyInfo.Id, 0);
+
+            while(true)
+            {
+				SpreadMessage message = ReceiveMessage();
+
+				if(message.Type == (short) SpreadMulticastType.CreateLobbyAckn)
+                {
+					++acknowledgements[lobbyInfo.Id];
+                }
+
+				if(acknowledgements[lobbyInfo.Id] >= groupMembers.Count)
+                {
+					acknowledgements.Remove(lobbyInfo.Id);
+					return true;
+                }
+            }
+
+			// ToDo: return false after time t
         }
 
-		private bool PrimaryLeft
-        {
-			get => !groupMembers.Contains(primaryName);
-        }
+        public void MulticastLobbyInfoToReplicas(LobbyInfo lobbyInfo)
+		{
+			string jsonString = JsonSerializer.Serialize(lobbyInfo);
+			SendMulticast(SpreadMulticastType.CreateLobbyToReplicas, jsonString);
+		}
+
+		public void MulticastLobbyInfoToPrimary(LobbyInfo lobbyInfo)
+		{
+			LobbySpreadDto lobbySpreadDto = new LobbySpreadDto();
+			lobbySpreadDto.OriginalSender = userName;
+			lobbySpreadDto.LobbyInfo = lobbyInfo;
+			string jsonString = JsonSerializer.Serialize(lobbyInfo);
+			SendMulticast(SpreadMulticastType.CreateLobbyToPrimary, jsonString);
+		}
 
 		private void MulticastIamPrimaryMessage()
-        {
-			var m = new SpreadMessage();
-			m.Data = Encoding.UTF8.GetBytes("I am new boban:" + userName);
-			m.AddGroup(spreadGroup);
-			spreadConnection.Multicast(m);
-        }
+		{
+			SendMulticast(SpreadMulticastType.NewPrimary, userName);
+			//var m = new SpreadMessage();
+			//m.Data = Encoding.UTF8.GetBytes(primaryMessagePrefix + userName);
+			//m.AddGroup(spreadGroup);
+			//spreadConnection.Multicast(m);
+		}
 
-        public void SendMessage(string message)
-        {
-            SendMessage(message, spreadGroup);
-        }
+		public void SendMulticast(SpreadMulticastType type, string data)
+		{
+			var msg = new SpreadMessage
+			{
+				Data = Encode(data),
+				Type = (short)type
+			};
+			msg.AddGroup(spreadGroup);
+			msg.IsSafe = true;
+			spreadConnection.Multicast(msg);
+		}
 
-        public void SendMessage(string message, SpreadGroup spreadGroup)
-        {
-            SpreadMessage msg = new SpreadMessage();
-            msg.Data = Encoding.ASCII.GetBytes(message);
-            msg.AddGroup(spreadGroup);
-            msg.IsSafe = true;
-            spreadConnection.Multicast(msg);
-        }
+		public SpreadMessage ReceiveMessage()
+		{
+			return spreadConnection.Receive();
+		}
 
-        public string ReceiveMessage()
-        {
-            SpreadMessage spreadMessage = spreadConnection.Receive();
-
-            if (spreadMessage.IsMembership)
-            {
-                MembershipInfo info = spreadMessage.MembershipInfo;
-                if (info.IsCausedByJoin)
-                    return "Joined: " + info.Joined;
-                else if (info.IsCausedByLeave)
-                    return $"Left: {info.Left}";
-                else if (info.IsCausedByDisconnect)
-                    return $"Disconnected: {info.Disconnected}";
-                else
-                    return $"Memership change";
-            }
-            else
-            {
-                return Encoding.ASCII.GetString(spreadMessage.Data);
-            }
-        }
+		private byte[] Encode(string s)
+		{
+			return Encoding.ASCII.GetBytes(s);
+		}
 
 		private void DisplayMessage(SpreadMessage msg)
 		{
@@ -343,9 +374,5 @@ namespace RegistrationServer.Spread
 			}
 		}
 
-		private string decode(byte[] b)
-        {
-			return System.Text.Encoding.ASCII.GetString(b);
-		}
-	}
+    }
 }
