@@ -3,14 +3,22 @@ syntax = "proto3";
 option csharp_namespace = "GrpcClient.Game.Proto";
 
 service Game {
-	rpc StartGame (StartGameRequest) returns (StartGameResonse);
+	rpc StartGame (StartGameRequest) returns (StartGameResponse);
+	rpc Hi (SayHiRequest) returns (SayHiResponse);
 }
 
+message	SayHiRequest
+{
+}
+
+message	SayHiResponse
+{
+}
 message StartGameRequest{
 	GameInfo gameInfo = 1;
 }
 
-message StartGameResonse{
+message StartGameResponse{
 }
 
 message Player {

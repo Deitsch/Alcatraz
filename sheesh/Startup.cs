@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Client.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using RegistrationServer.Services;
-using RegistrationServer.Spread;
-using RegistrationServer.Spread.Interface;
 
-namespace RegistrationServer
+namespace Client
 {
     public class Startup
     {
@@ -20,8 +14,6 @@ namespace RegistrationServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddGrpc();
-            services.AddSingleton<ISpreadConn, SpreadConn>();
-            services.AddSingleton<LobbyService>();
             services.AddSingleton<GameService>();
         }
 
@@ -37,7 +29,6 @@ namespace RegistrationServer
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGrpcService<LobbyService>();
                 endpoints.MapGrpcService<GameService>();
 
                 endpoints.MapGet("/", async context =>

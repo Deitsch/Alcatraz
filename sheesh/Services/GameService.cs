@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
+using Client.Game.Proto;
 using Grpc.Core;
-using GrpcClient.Game.Proto;
 using Microsoft.Extensions.Logging;
 
-namespace GrpcClient.Services
+namespace Client.Services
 {
     public class GameService : Game.Proto.Game.GameBase
     {
@@ -18,7 +18,7 @@ namespace GrpcClient.Services
 
         public override Task<SayHiResponse> Hi(SayHiRequest request, ServerCallContext context)
         {
-            Console.WriteLine("hi from grpcclient");
+            Console.WriteLine("hi from client");
 
             return Task.FromResult(new SayHiResponse());
         }

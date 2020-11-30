@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcClient", "GrpcClient\Gr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RegistrationServer", "RegistrationServer\RegistrationServer.csproj", "{F5D9C200-3382-42D6-83A5-342FBB7558F3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "sheesh\Client.csproj", "{3E113286-5F7E-4FFF-9FC6-F462D5E9F0D3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{F5D9C200-3382-42D6-83A5-342FBB7558F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F5D9C200-3382-42D6-83A5-342FBB7558F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F5D9C200-3382-42D6-83A5-342FBB7558F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E113286-5F7E-4FFF-9FC6-F462D5E9F0D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E113286-5F7E-4FFF-9FC6-F462D5E9F0D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E113286-5F7E-4FFF-9FC6-F462D5E9F0D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E113286-5F7E-4FFF-9FC6-F462D5E9F0D3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

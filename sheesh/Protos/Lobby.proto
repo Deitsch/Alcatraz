@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+option csharp_namespace = "Client.Lobby.Proto";
+
+service Lobby {
+	rpc CreateLobby (CreateLobbyRequest) returns (JoinLobbyResponse);
+	rpc GetLobbies (GetLobbiesRequest) returns (GetLobbiesResponse);
+	rpc JoinLobby (JoinLobbyRequest) returns (JoinLobbyResponse);
+	rpc LeaveLobby (LeaveLobbyRequest) returns (LeaveLobbyResponse);
+	rpc RequestGameStart (RequestGameStartRequest) returns (RequestGameStartResponse);
+}
+
+message GetLobbiesRequest {
+}
+
+message GetLobbiesResponse {
+	repeated LobbyInfo Lobbies = 1;
+}
+
+message CreateLobbyRequest {
+	Player player = 1;
+}
+
+message JoinLobbyRequest {
+	string lobbyId = 1;
+	Player player = 2;
+}
+
+message JoinLobbyResponse {
+	LobbyInfo lobby = 1;
+}
+
+message LeaveLobbyRequest {
+	string lobbyId = 1;
+	Player player = 2;
+}
+
+message LeaveLobbyResponse {
+}
+
+message RequestGameStartRequest{
+	string lobbyId = 1;
+}
+
+message RequestGameStartResponse{
+}
+
+message Player {
+	string ip = 1;
+	int32 port = 2;
+	string name = 3;
+}
+
+message LobbyInfo {
+	string id = 1;
+	repeated Player players = 2;
+}

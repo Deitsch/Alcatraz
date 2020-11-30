@@ -1,24 +1,26 @@
-using Grpc.Core;
-using Microsoft.Extensions.Logging;
-using RegistrationServer.Lobby.Proto;
-using RegistrationServer.Spread.Interface;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Grpc.Core;
+using Microsoft.Extensions.Logging;
+using RegistrationServer.Lobby.Proto;
+using RegistrationServer.Spread.Interface;
 
-namespace RegistrationServer
+namespace RegistrationServer.Services
 {
     public class LobbyService : Lobby.Proto.Lobby.LobbyBase
     {
         private readonly ILogger<LobbyService> _logger;
-        private readonly ISpreadConn spreadConn;
+        private readonly ISpreadConn _spreadConn;
+        private readonly GameService _gameService;
         private readonly List<LobbyInfo> _lobbies;
 
-        public LobbyService(ILogger<LobbyService> logger, ISpreadConn spreadConn)
+        public LobbyService(ILogger<LobbyService> logger, ISpreadConn spreadConn, GameService gameService)
         {
             _logger = logger;
-            this.spreadConn = spreadConn;
+            _spreadConn = spreadConn;
+            _gameService = gameService;
             _lobbies = new List<LobbyInfo>();
         }
 
@@ -66,7 +68,7 @@ namespace RegistrationServer
                     $"Lobby with id {lobbyToJoin.Id} is already full"));
             }
             lobbyToJoin.Players.Add(request.Player);
-            spreadConn.SendMessage($"New Player: {request.Player.Name}");
+            _spreadConn.SendMessage($"New Player: {request.Player.Name}");
             response.Lobby = lobbyToJoin;
             return Task.FromResult(response);
         }
@@ -101,12 +103,12 @@ namespace RegistrationServer
                 throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
             }
 
-            if (lobby.Players.Count < 2)
-            {
-                throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Lobby with id {lobby.Id} has not enough players to start"));
-            }
+            //if (lobby.Players.Count < 2)
+            //{
+            //    throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Lobby with id {lobby.Id} has not enough players to start"));
+            //}
 
-            //StartGame(lobby);
+            _gameService.StartGame(lobby);
             return Task.FromResult(new RequestGameStartResponse());
         }
     }
