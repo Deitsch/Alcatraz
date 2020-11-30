@@ -113,7 +113,7 @@ namespace RegistrationServer.Spread
 
             while (sw.Elapsed.TotalMinutes < 1)
             {
-                if (acknCount[lobbyId] >= spreadService.GroupMemberCounter)
+                if (acknCount[lobbyId] >= spreadService.GroupMemberCounter - 1)
                 {
                     allAcknReceived = true;
                     break;

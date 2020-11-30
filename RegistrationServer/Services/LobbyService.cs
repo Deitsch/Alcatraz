@@ -16,13 +16,15 @@ namespace RegistrationServer
         private readonly ISpreadService spreadService;
         private readonly MessageListener listener;
         private readonly LobbyRepository lobbyRepository;
+        private readonly CreateLobbyOperation createLobbyOperation;
 
-        public LobbyService(ILogger<LobbyService> logger, ISpreadService spreadService, MessageListener listener, LobbyRepository lobbyRepository)
+        public LobbyService(ILogger<LobbyService> logger, ISpreadService spreadService, MessageListener listener, LobbyRepository lobbyRepository, CreateLobbyOperation createLobbyOperation)
         {
             this.logger = logger;
             this.spreadService = spreadService;
             this.listener = listener;
             this.lobbyRepository = lobbyRepository;
+            this.createLobbyOperation = createLobbyOperation;
         }
 
         public override Task<GetLobbiesResponse> GetLobbies(GetLobbiesRequest request, ServerCallContext context)
@@ -40,8 +42,6 @@ namespace RegistrationServer
                 Id = Guid.NewGuid().ToString()
             };
             lobbyInfo.Players.Add(request.Player);
-
-            CreateLobbyOperation createLobbyOperation = new CreateLobbyOperation(listener, spreadService, lobbyRepository);
 
             try
             {

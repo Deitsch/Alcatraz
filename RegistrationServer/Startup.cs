@@ -7,7 +7,9 @@ using RegistrationServer.Listener;
 using RegistrationServer.Repositories;
 using RegistrationServer.Spread;
 using RegistrationServer.Spread.Interface;
+using RegistrationServer.Spread.Operations;
 using System;
+using System.Threading;
 
 namespace RegistrationServer
 {
@@ -20,13 +22,15 @@ namespace RegistrationServer
             services.AddGrpc();
             services.AddSingleton<ISpreadService, SpreadService>();
             services.AddSingleton<ISpreadConnectionWrapper, SpreadConnectionWrapper>();
+            services.AddSingleton<IOperationManager, OperationManager>();
             services.AddSingleton<MessageListener>();
             services.AddSingleton<LobbyService>();
             services.AddSingleton<LobbyRepository>();
+            services.AddSingleton<CreateLobbyOperation>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ISpreadConnectionWrapper connection, ISpreadService spreadService)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ISpreadConnectionWrapper connection, ISpreadService spreadService, IOperationManager operationManager)
         {
             if (env.IsDevelopment())
             {
@@ -46,7 +50,9 @@ namespace RegistrationServer
             });
 
             connection.Connect(ConfigFile.SPREAD_ADDRESS, ConfigFile.SPREAD_PORT, Guid.NewGuid().ToString(), ConfigFile.SPREAD_PRIORITY, ConfigFile.SPREAD_GROUP_MEMBERSHIP);
-            spreadService.Run();
+            operationManager.AddOperationListeners();
+            Thread thread = new Thread(() => spreadService.Run());
+            thread.Start();
         }
     }
 }

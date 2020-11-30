@@ -50,34 +50,14 @@ namespace RegistrationServer.Spread
 			while (true)
             {
 				messageListener.Listen();
-
-				try
-                {
-					if (threadSuspended)
-                    {
-                        lock (this)
-                        {
-                            while (threadSuspended)
-                            {
-                                Monitor.Wait(this);
-                            }
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
             }
         }
 
 		private void HandleMessage(SpreadMessage message)
 		{
-			Console.WriteLine("Message Recieved");
-			DisplayMessage(message);
-
-			if(message.IsMembership)
-            {
+			if (message.IsMembership)
+			{
+				DisplayMessage(message);
 				MembershipInfo info = message.MembershipInfo;
 				UpdateList(info.Members);
 
@@ -96,11 +76,16 @@ namespace RegistrationServer.Spread
 						SendMulticast(MulticastType.NewPrimary, UserName);
 				}
 			}
-			else if(message.Type == (short) MulticastType.NewPrimary)
-            {
-				primaryName = message.Data.DecodeToString();
-				Console.WriteLine("New Primary was set: " + primaryName);
-            }
+			else
+			{
+				switch (message.Type)
+				{
+					case (short)MulticastType.NewPrimary:
+						primaryName = message.Data.DecodeToString();
+						Console.WriteLine("New Primary was set: " + primaryName);
+						break;
+				}
+			}
 		}
 
 		private void UpdateList(SpreadGroup[] actualMembers)
