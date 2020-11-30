@@ -34,6 +34,8 @@ namespace RegistrationServer.Spread
                 LobbyInfo = lobbyInfo,
                 OriginalSender = spreadService.UserName
             };
+
+            Console.WriteLine("Send Lobby to Primary");
             spreadService.SendMulticast(MulticastType.CreateLobbyToPrimary, JsonSerializer.Serialize(lobbyDto));
 
             try
@@ -59,6 +61,7 @@ namespace RegistrationServer.Spread
                         Thread thread = new Thread(() => CollectAckn(message));
                         thread.Start();
 
+                        Console.WriteLine("Send Lobby to Replica");
                         spreadService.SendMulticast(MulticastType.CreateLobbyToReplicas, message.Data);
                     }
                     break;
@@ -69,6 +72,8 @@ namespace RegistrationServer.Spread
                         Console.WriteLine("Received on Replica");
 
                         lobbyRepository.SaveLobby(message.GetLobby());
+
+                        Console.WriteLine("Send Ackn to Primary");
                         spreadService.SendMulticast(MulticastType.CreateLobbyAcknToPrimary, message.Data);
                     }
                     break;
@@ -127,10 +132,13 @@ namespace RegistrationServer.Spread
             if(allAcknReceived)
             {
                 lobbyRepository.SaveLobby(message.GetLobby());
+
+                Console.WriteLine("Send 'successfully' to Original Sender");
                 spreadService.SendMulticast(MulticastType.CreateLobbyToOriginalSenderSuccessfully, message.Data);
             }
             else
             {
+                Console.WriteLine("Send 'not successfully' to Original Sender");
                 spreadService.SendMulticast(MulticastType.CreateLobbyToOriginalSenderNotSuccessfully, message.Data);
             }
         }
