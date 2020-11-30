@@ -1,8 +1,5 @@
-﻿using RegistrationServer.Proto;
-using System;
+﻿using RegistrationServer.Lobby.Proto;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace RegistrationServer.Repositories
 {

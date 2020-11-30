@@ -1,4 +1,4 @@
-﻿using RegistrationServer.Proto;
+﻿using RegistrationServer.Lobby.Proto;
 using RegistrationServer.Spread;
 using spread;
 using System.Text;

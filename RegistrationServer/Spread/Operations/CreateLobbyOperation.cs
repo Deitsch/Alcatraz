@@ -1,5 +1,5 @@
 ﻿using RegistrationServer.Listener;
-using RegistrationServer.Proto;
+using RegistrationServer.Lobby.Proto;
 using RegistrationServer.Repositories;
 using RegistrationServer.Spread.Interface;
 using RegistrationServer.utils;
