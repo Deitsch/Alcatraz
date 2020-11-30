@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using RegistrationServer.Listener;
 using RegistrationServer.Repositories;
 using RegistrationServer.Spread;
 using RegistrationServer.Spread.Interface;
+using System;
 
 namespace RegistrationServer
 {
@@ -16,14 +18,15 @@ namespace RegistrationServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddGrpc();
-            services.AddSingleton<ISpreadConnection, SpreadConnection>();
+            services.AddSingleton<ISpreadService, SpreadService>();
+            services.AddSingleton<ISpreadConnectionWrapper, SpreadConnectionWrapper>();
+            services.AddSingleton<MessageListener>();
             services.AddSingleton<LobbyService>();
             services.AddSingleton<LobbyRepository>();
-            services.AddSingleton<SpreadManager>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, SpreadManager spreadManager)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ISpreadConnectionWrapper connection, ISpreadService spreadService)
         {
             if (env.IsDevelopment())
             {
@@ -43,7 +46,8 @@ namespace RegistrationServer
                 });
             });
 
-            spreadManager.RunSpread();
+            connection.Connect(ConfigFile.SPREAD_ADDRESS, ConfigFile.SPREAD_PORT, Guid.NewGuid().ToString(), ConfigFile.SPREAD_PRIORITY, ConfigFile.SPREAD_GROUP_MEMBERSHIP);
+            spreadService.Run();
         }
     }
 }

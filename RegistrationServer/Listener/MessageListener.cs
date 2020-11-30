@@ -1,9 +1,5 @@
 ﻿using RegistrationServer.Spread.Interface;
-using spread;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace RegistrationServer.Listener
 {
@@ -11,16 +7,16 @@ namespace RegistrationServer.Listener
     {
         public event EventHandler<ReceiveArgs> Receive = delegate { };
 
-        public ISpreadConnection connection;
+        private readonly ISpreadConnectionWrapper connection;
 
-        public MessageListener(ISpreadConnection connection)
+        public MessageListener(ISpreadConnectionWrapper connection)
         {
             this.connection = connection;
         }
 
         public void Listen()
         {
-            var spreadMessage = connection.Receive();
+            var spreadMessage = connection.SpreadConnection.Receive();
             Receive(this, new ReceiveArgs(spreadMessage));
         }
     }

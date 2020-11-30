@@ -1,110 +1,58 @@
 ﻿using RegistrationServer.Listener;
-using RegistrationServer.Proto;
-using RegistrationServer.Repositories;
 using RegistrationServer.Spread.Interface;
+using RegistrationServer.utils;
 using spread;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Text.Json;
 using System.Threading;
 
 namespace RegistrationServer.Spread
 {
-	public class SpreadConnection : ISpreadConnection
+    public class SpreadService : ISpreadService
 	{
-		//private static string primaryMessagePrefix = "I am new boban:";
-
-		public spread.SpreadConnection spreadConnection { get; }
-		SpreadGroup spreadGroup { get; }
-
-		List<string> groupMembers = new List<string>();
+        readonly List<string> groupMembers = new List<string>();
 
 		public int GroupMemberCounter { get => groupMembers.Count; }
 
         public bool IsPrimary
         {
-			get => primaryName == userName;
+			get => primaryName == UserName;
         }
 
-		private bool threadSuspended;
+		public string UserName
+		{
+			get => connection.UserName;
+		}
+
+		private bool PrimaryLeft
+		{
+			get => !groupMembers.Contains(primaryName);
+		}
+
+		private bool threadSuspended; // probably useless
 
 		private string primaryName;
 
-		public string userName;
+        private readonly ISpreadConnectionWrapper connection;
+        private readonly MessageListener messageListener;
 
-        private readonly LobbyRepository _lobbyRepository;
-
-		private MessageListener messageListener;
-
-        public SpreadConnection(LobbyRepository lobbyRepository)
+        public SpreadService(ISpreadConnectionWrapper connection, MessageListener messageListener)
 		{ 
-            try
-            {
-                spreadConnection = new spread.SpreadConnection();
-				messageListener = new MessageListener(spreadConnection);
-
-			}
-            catch (SpreadException e)
-            {
-                Console.Error.WriteLine("There was an error connecting to the daemon.");
-                Console.WriteLine(e);
-                Environment.Exit(1);
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine("Can't find the daemon " + ConfigFile.SPREAD_ADDRESS);
-                Console.WriteLine(e);
-                Environment.Exit(1);
-            }
-
-            _lobbyRepository = lobbyRepository;
-        }
-
-        //Parameter user must be unique!
-        public void Connect(string address, int port, string user, bool priority, bool groupMembership)
-        {
-            try
-            {
-                spreadConnection.Connect(address, port, user, priority, groupMembership);
-                Console.WriteLine($"Log: connected with: {address}; {port}; {user}; {priority}; {groupMembership}");
-				spreadGroup = JoinGroup(ConfigFile.SPREAD_GROUP_NAME);
-				userName = user.Substring(0,8);
-			}
-            catch (SpreadException e)
-            {
-                Console.Error.WriteLine("There was an error connecting to the daemon.");
-                Console.WriteLine(e);
-                Environment.Exit(1);
-            }
-        }
-
-        public SpreadGroup JoinGroup(string groupName)
-        {
-            SpreadGroup spreadGroup = new SpreadGroup();
-            spreadGroup.Join(spreadConnection, groupName);
-            return spreadGroup;
+            this.connection = connection;
+            this.messageListener = messageListener;
         }
 
         public void Run()
         {
-			Test();
+			messageListener.Receive += (sender, e) => HandleMessage(e.Message);
 
 			while (true)
             {
-                try
+				messageListener.Listen();
+
+				try
                 {
-
-					messageListener.Receive += (sender, e) => DisplayMessage(e.Message);
-					messageListener.Listen();
-                    //DisplayMessage(msg);
-					//var thread = new Thread(() => HandleMessage(msg));
-					//thread.Start();
-
 					if (threadSuspended)
                     {
                         lock (this)
@@ -123,42 +71,36 @@ namespace RegistrationServer.Spread
             }
         }
 
-		private void Test()
-        {
-			messageListener.Receive += (sender, e) => DisplayMessage(e.Message);
-        }
-
-		private void HandleDefaultMessages(SpreadMessage message)
+		private void HandleMessage(SpreadMessage message)
 		{
-			Console.WriteLine("Default Message Recieved");
-			MembershipInfo info = message.MembershipInfo;
-			UpdateList(info.Members);
-			if (info.IsCausedByJoin)
-			{
-				if (IsPrimary)
-					MulticastIamPrimaryMessage();
+			Console.WriteLine("Message Recieved");
+			DisplayMessage(message);
 
-				if (info.Members.Length == 1)
-					primaryName = userName;
+			if(message.IsMembership)
+            {
+				MembershipInfo info = message.MembershipInfo;
+				UpdateList(info.Members);
 
-			}
-			else if (info.IsCausedByLeave || info.IsCausedByDisconnect)
-			{
-				if (PrimaryLeft && IAmNewPrimary())
+				if (info.IsCausedByJoin)
 				{
-					MulticastIamPrimaryMessage();
+					if (IsPrimary)
+						SendMulticast(MulticastType.NewPrimary, UserName);
+
+					if (info.Members.Length == 1)
+						primaryName = UserName;
+
+				}
+				else if (info.IsCausedByLeave || info.IsCausedByDisconnect)
+				{
+					if (PrimaryLeft && IAmNewPrimary())
+						SendMulticast(MulticastType.NewPrimary, UserName);
 				}
 			}
-		}
-
-		private bool IAmNewPrimary()
-		{
-			return userName == groupMembers.Max();
-		}
-
-		private bool PrimaryLeft
-		{
-			get => !groupMembers.Contains(primaryName);
+			else if(message.Type == (short) MulticastType.NewPrimary)
+            {
+				primaryName = message.Data.DecodeToString();
+				Console.WriteLine("New Primary was set: " + primaryName);
+            }
 		}
 
 		private void UpdateList(SpreadGroup[] actualMembers)
@@ -167,73 +109,26 @@ namespace RegistrationServer.Spread
 			groupMembers.AddRange(actualMembers.Select(m => m.ToString().Trim('#').Substring(0, 8)));
 		}
 
-        private bool getAcknForCreateLobby(LobbyInfo lobbyInfo)
-        {
-			acknowledgements.Add(lobbyInfo.Id, 0);
-
-            while(true)
-            {
-				SpreadMessage message = ReceiveMessage();
-
-				if(message.Type == (short) SpreadMulticastType.CreateLobbyAckn)
-                {
-					++acknowledgements[lobbyInfo.Id];
-                }
-
-				if(acknowledgements[lobbyInfo.Id] >= groupMembers.Count)
-                {
-					acknowledgements.Remove(lobbyInfo.Id);
-					return true;
-                }
-            }
-
-			// ToDo: return false after time t
-        }
-
-        public void MulticastLobbyInfoToReplicas(LobbyInfo lobbyInfo)
+		private bool IAmNewPrimary()
 		{
-			string jsonString = JsonSerializer.Serialize(lobbyInfo);
-			SendMulticast(SpreadMulticastType.CreateLobbyToReplicas, jsonString);
+			return UserName == groupMembers.Max();
 		}
 
-		public void MulticastLobbyInfoToPrimary(LobbyInfo lobbyInfo)
+        public void SendMulticast(MulticastType type, string data)
 		{
-			LobbySpreadDto lobbySpreadDto = new LobbySpreadDto();
-			lobbySpreadDto.OriginalSender = userName;
-			lobbySpreadDto.LobbyInfo = lobbyInfo;
-			string jsonString = JsonSerializer.Serialize(lobbyInfo);
-			SendMulticast(SpreadMulticastType.CreateLobbyToPrimary, jsonString);
+			SendMulticast(type, data.EncodeToByteArray());
 		}
 
-		private void MulticastIamPrimaryMessage()
-		{
-			SendMulticast(SpreadMulticastType.NewPrimary, userName);
-			//var m = new SpreadMessage();
-			//m.Data = Encoding.UTF8.GetBytes(primaryMessagePrefix + userName);
-			//m.AddGroup(spreadGroup);
-			//spreadConnection.Multicast(m);
-		}
-
-		public void SendMulticast(SpreadMulticastType type, string data)
+		public void SendMulticast(MulticastType type, byte[] data)
 		{
 			var msg = new SpreadMessage
 			{
-				Data = Encode(data),
+				Data = data,
 				Type = (short)type
 			};
-			msg.AddGroup(spreadGroup);
+			msg.AddGroup(connection.SpreadGroup);
 			msg.IsSafe = true;
-			spreadConnection.Multicast(msg);
-		}
-
-		public SpreadMessage ReceiveMessage()
-		{
-			return spreadConnection.Receive();
-		}
-
-		private byte[] Encode(string s)
-		{
-			return Encoding.ASCII.GetBytes(s);
+			connection.SpreadConnection.Multicast(msg);
 		}
 
 		private void DisplayMessage(SpreadMessage msg)
@@ -373,6 +268,5 @@ namespace RegistrationServer.Spread
 				Environment.Exit(1);
 			}
 		}
-
     }
 }

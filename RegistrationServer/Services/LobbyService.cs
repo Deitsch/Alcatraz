@@ -1,9 +1,7 @@
 using System.Threading.Tasks;
 using Grpc.Core;
-using Microsoft.Extensions.Logging;
 using RegistrationServer.Spread.Interface;
 using RegistrationServer.Proto;
-using System.Collections.Generic;
 using System;
 using RegistrationServer.Repositories;
 using RegistrationServer.Spread;
@@ -11,19 +9,16 @@ using RegistrationServer.Listener;
 
 namespace RegistrationServer
 {
-
     public class LobbyService : Lobby.LobbyBase
     {
-        private readonly ILogger<LobbyService> _logger;
-        private readonly ISpreadConnection _spreadConn;
+        private readonly ISpreadService spreadService;
         private readonly MessageListener listener;
-        private readonly LobbyRepository _lobbyRepository;
+        private readonly LobbyRepository lobbyRepository;
 
-        public LobbyService(ILogger<LobbyService> logger, ISpreadConnection spreadConn, MessageListener listener , LobbyRepository lobbyRepository)
+        public LobbyService(ISpreadService spreadService, MessageListener listener, LobbyRepository lobbyRepository)
         {
-            _logger = logger;
-            _spreadConn = spreadConn;
-            _lobbyRepository = lobbyRepository;
+            this.spreadService = spreadService;
+            this.lobbyRepository = lobbyRepository;
             this.listener = listener;
         }
 
@@ -31,47 +26,40 @@ namespace RegistrationServer
         {
             var response = new GetLobbiesResponse();
 
-            response.Lobbies.AddRange(_lobbyRepository.GetLobbies());
+            response.Lobbies.AddRange(lobbyRepository.GetLobbies());
             return Task.FromResult(response);
         }
 
         public override Task<JoinLobbyResponse> CreateLobby(CreateLobbyRequest request, ServerCallContext context)
         {
-            
-            LobbyInfo lobbyInfo = getLobbyInfoFromCreateLobbyRequest(request);
+            LobbyInfo lobbyInfo = GetLobbyInfoFromCreateLobbyRequest(request);
 
-            if (_spreadConn.IsPrimary)
+            CreateLobbyOperation createLobbyOperation = new CreateLobbyOperation(listener, spreadService, lobbyRepository);
+
+            try
             {
-                _spreadConn.multicastLobbyInfoToReplicas(lobbyInfo);
-                GetAcknFromReplicas();
-                if (ackn)
-                    _lobbyRepository.SaveLobby(lobbyInfo);
-                else
+                createLobbyOperation.Execute(lobbyInfo);
+
+                JoinLobbyResponse joinLobbyResponse = new JoinLobbyResponse
                 {
-                    // throw exception
-                }
+                    Lobby = lobbyInfo
+                };
+                return Task.FromResult(joinLobbyResponse);
             }
-            else
+            catch (Exception e)
             {
-                _spreadConn.MulticastLobbyInfoToPrimary(lobbyInfo);
-                lobbyInfo = _spreadConn.ReceiveLobbyInfoFromPrimary();
+                throw e;
             }
-
-            var response = new JoinLobbyResponse
-            {
-                Lobby = lobbyInfo
-            };
-            return Task.FromResult(response);
         }
 
         public override Task<JoinLobbyResponse> JoinLobby(JoinLobbyRequest request, ServerCallContext context)
         {
             var response = new JoinLobbyResponse();
-            _spreadConn.SendMulticast(SpreadMulticastType.NewPlayerJoined, $"New Player: {request.PlayerName}");
+            spreadService.SendMulticast(MulticastType.NewPlayerJoined, $"New Player: {request.PlayerName}");
             return Task.FromResult(response);
         }
 
-        private LobbyInfo getLobbyInfoFromCreateLobbyRequest(CreateLobbyRequest request)
+        private LobbyInfo GetLobbyInfoFromCreateLobbyRequest(CreateLobbyRequest request)
         {
             var lobbyInfo = new LobbyInfo
             {
@@ -85,11 +73,6 @@ namespace RegistrationServer
             };
             lobbyInfo.Players.Add(player);
             return lobbyInfo;
-        }
-
-        private bool GetAcknFromReplicas(LobbyInfo lobbyInfo)
-        {
-         
         }
     }
 }
