@@ -1,9 +1,12 @@
-using System;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using RegistrationServer.Game.Proto;
 using RegistrationServer.Lobby.Proto;
 using RegistrationServer.Spread.Interface;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
 namespace RegistrationServer.Services
 {
@@ -24,19 +27,45 @@ namespace RegistrationServer.Services
         {
             var gameInfo = new GameInfo();
             gameInfo.Id = Guid.NewGuid().ToString();
+            var gameClientList = new List<Game.Proto.Game.GameClient>();
             foreach (var player in lobby.Players)
             {
                 gameInfo.Players.Add(GetPlayer(player));
+                //var channel = GrpcChannel.ForAddress($"http://{player.Ip}:{player.Port}");
+                //gameClientList.Add(new Game.Proto.Game.GameClient(channel));
             }
 
-            foreach (var player in lobby.Players)
+            var allGood = false;
+            while (!allGood)
             {
-                AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-                using var channel = GrpcChannel.ForAddress($"http://{player.Ip}:{player.Port}");
-                var client = new Game.Proto.Game.GameClient(channel);
-                client.Hi(new SayHiRequest());
-                //client.StartGame(new StartGameRequest {GameInfo = gameInfo});
+                allGood = true;
+                foreach (var player in lobby.Players)
+                {
+                    try
+                    {
+                        AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                        var channel = GrpcChannel.ForAddress($"http://{player.Ip}:{player.Port}");
+                        using (channel)
+                        {
+                            var gameClient = new Game.Proto.Game.GameClient(channel);
+                            gameClient.InitGame(new InitGameRequest {GameInfo = gameInfo});
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        allGood = false;
+                        Thread.Sleep(1000);
+                        break;
+                    }
+                }
             }
+            var firstPlayer = gameInfo.Players.First();
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+            using var c = GrpcChannel.ForAddress($"http://{firstPlayer.Ip}:{firstPlayer.Port}");
+            var gClient = new Game.Proto.Game.GameClient(c);
+            gClient.StartGame(new StartGameRequest());
+
         }
 
         private RegistrationServer.Game.Proto.Player GetPlayer(Lobby.Proto.Player lobbyPlayer)

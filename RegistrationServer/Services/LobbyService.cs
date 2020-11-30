@@ -103,10 +103,10 @@ namespace RegistrationServer.Services
                 throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
             }
 
-            //if (lobby.Players.Count < 2)
-            //{
-            //    throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Lobby with id {lobby.Id} has not enough players to start"));
-            //}
+            if (lobby.Players.Count < 2)
+            {
+                throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Lobby with id {lobby.Id} has not enough players to start"));
+            }
 
             _gameService.StartGame(lobby);
             return Task.FromResult(new RequestGameStartResponse());

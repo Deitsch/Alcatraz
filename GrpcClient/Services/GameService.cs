@@ -16,16 +16,17 @@ namespace GrpcClient.Services
             _logger = logger;
         }
 
-        public override Task<SayHiResponse> Hi(SayHiRequest request, ServerCallContext context)
+        public override Task<InitGameResponse> InitGame(InitGameRequest request, ServerCallContext context)
         {
-            Console.WriteLine("hi from grpcclient");
-
-            return Task.FromResult(new SayHiResponse());
+            Console.WriteLine("Init Game");
+            //var alcatraz = new Alcatraz.Alcatraz();
+            //alcatraz.showWindow();
+            return Task.FromResult(new InitGameResponse());
         }
 
         public override Task<StartGameResponse> StartGame(StartGameRequest request, ServerCallContext context)
         {
-            Console.WriteLine("sheesh sccr lul");
+            Console.WriteLine("Start Game");
             //var alcatraz = new Alcatraz.Alcatraz();
             //alcatraz.showWindow();
             return Task.FromResult(new StartGameResponse());

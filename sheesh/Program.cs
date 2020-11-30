@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+//using System.Windows.Forms;
 using Grpc.Net.Client;
 using Client.Game.Proto;
 using Microsoft.AspNetCore.Hosting;
@@ -25,7 +25,10 @@ namespace Client
             //Application.SetCompatibleTextRenderingDefault(false);
             //Application.Run(new Form1());
 
-            
+            //var alcatraz = new Alcatraz.Alcatraz();
+            //alcatraz.init(2, 1);
+            //alcatraz.showWindow();
+
             Console.Write("Enter your port: ");
             var port = Console.ReadLine();
             var webHost = CreateHostBuilder(args,port).Build();
