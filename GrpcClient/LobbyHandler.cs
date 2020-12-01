@@ -57,6 +57,9 @@ namespace GrpcClient
                     case "start":
                         StartGame(_currentLobbyId);
                         break;
+                    case "move":
+                        DoMove();
+                        break;
                     default:
                         Console.WriteLine("Invalid input");
                         break;
@@ -67,9 +70,16 @@ namespace GrpcClient
             }
         }
 
-        private void StartGame(string lobbyId)
+        private void DoMove()
+        {
+            ;
+        }
+
+        private static void StartGame(string lobbyId)
         {
             lobbyClient.RequestGameStart(new RequestGameStartRequest { LobbyId = lobbyId });
+            Console.WriteLine($"Game of Lobby {lobbyId} started!");
+            //todo delete/flag lobby
         }
 
         private void LeaveLobby(string lobbyId, Player player)

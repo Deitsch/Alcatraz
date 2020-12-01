@@ -4,7 +4,8 @@ option csharp_namespace = "GrpcClient.Game.Proto";
 
 service Game {
 	rpc InitGame (InitGameRequest) returns (InitGameResponse);
-	rpc StartGame (StartGameRequest) returns (StartGameResponse);
+	rpc SetCurrentPlayer (SetCurrentPlayerRequest) returns (SetCurrentPlayerResponse);
+	rpc MakeMove (MakeMoveRequest) returns (MakeMoveResponse);
 }
 
 message InitGameRequest{
@@ -14,19 +15,43 @@ message InitGameRequest{
 message InitGameResponse{
 }
 
-message StartGameRequest{
+message SetCurrentPlayerRequest{
 }
 
-message StartGameResponse{
+message SetCurrentPlayerResponse{
 }
 
-message Player {
+message MakeMoveRequest{
+	MoveInfo moveInfo = 1;
+}
+
+message MakeMoveResponse{
+}
+
+message NetworkPlayer {
 	string ip = 1;
 	int32 port = 2;
 	string name = 3;
 }
 
 message GameInfo {
+	int32 index = 1;
+	repeated NetworkPlayer players = 2;
+
+}
+
+message Point{
+	int32 x = 1;
+	int32 y = 2;
+}
+
+message Prisoner{
+	Point oldPoint = 1;
+	Point newPoint = 2;
+}
+
+message MoveInfo {
 	string id = 1;
-	repeated Player players = 2;
+	string playerName = 2;
+	Prisoner prisoner = 3;
 }

@@ -26,6 +26,7 @@ namespace RegistrationServer.Services
 
         public override Task<GetLobbiesResponse> GetLobbies(GetLobbiesRequest request, ServerCallContext context)
         {
+            Console.WriteLine("Get Lobbies request");
             var response = new GetLobbiesResponse();
             foreach (var lobby in _lobbies)
             {
@@ -36,6 +37,7 @@ namespace RegistrationServer.Services
 
         public override Task<JoinLobbyResponse> CreateLobby(CreateLobbyRequest request, ServerCallContext context)
         {
+            Console.WriteLine("Create Lobby request");
             var response = new JoinLobbyResponse();
             var lobbyInfo = new LobbyInfo
             {
@@ -49,6 +51,7 @@ namespace RegistrationServer.Services
 
         public override Task<JoinLobbyResponse> JoinLobby(JoinLobbyRequest request, ServerCallContext context)
         {
+            Console.WriteLine("Join Lobby request");
             var response = new JoinLobbyResponse();
             var lobbyToJoin = _lobbies.Single(l => l.Id == request.LobbyId);
             if (lobbyToJoin == null)
@@ -75,6 +78,7 @@ namespace RegistrationServer.Services
 
         public override Task<LeaveLobbyResponse> LeaveLobby(LeaveLobbyRequest request, ServerCallContext context)
         {
+            Console.WriteLine("Leave Lobby request");
             var response = new LeaveLobbyResponse();
             var lobbyToLeave = _lobbies.SingleOrDefault(l => l.Id == request.LobbyId);
             if (lobbyToLeave == null)
@@ -97,6 +101,7 @@ namespace RegistrationServer.Services
 
         public override Task<RequestGameStartResponse> RequestGameStart(RequestGameStartRequest request, ServerCallContext context)
         {
+            Console.WriteLine("RequestGamestart request");
             var lobby = _lobbies.SingleOrDefault(l => l.Id == request.LobbyId);
             if (lobby == null)
             {
