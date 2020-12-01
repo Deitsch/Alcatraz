@@ -86,7 +86,7 @@ namespace RegistrationServer.Services
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    Console.WriteLine("Waiting for first Player to respond -> retry in 1000 ms");
                     allGood = false;
                     Thread.Sleep(1000);
                 }
