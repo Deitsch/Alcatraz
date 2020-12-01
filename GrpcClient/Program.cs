@@ -20,9 +20,11 @@ namespace GrpcClient
             //var alcatraz = new Alcatraz.Alcatraz();
             //alcatraz.showWindow();
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+            Console.Write("Enter your ip: ");
+            var ip = Console.ReadLine();
             Console.Write("Enter your port: ");
             var port = Console.ReadLine();
-            var webHost = CreateHostBuilder(args,port).Build();
+            var webHost = CreateHostBuilder(args,ip,port).Build();
             webHost.Start();
 
 
@@ -36,7 +38,8 @@ namespace GrpcClient
             var playerName = Console.ReadLine();
             var player = new Player
             {
-                Ip = "127.0.0.1",
+                //Ip = "127.0.0.1",
+                Ip = ip,
                 Port = Convert.ToInt32(port),
                 Name = playerName,
                 PlayerState = PlayerState.Unknown,
@@ -51,12 +54,12 @@ namespace GrpcClient
 
         // Additional configuration is required to successfully run gRPC on macOS.
         // For instructions on how to configure Kestrel and gRPC clients on macOS, visit https://go.microsoft.com/fwlink/?linkid=2099682
-        public static IHostBuilder CreateHostBuilder(string[] args, string port) =>
+        public static IHostBuilder CreateHostBuilder(string[] args,string ip, string port) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                    webBuilder.UseUrls($"http://localhost:{port}");
+                    webBuilder.UseUrls($"http://{ip}:{port}");
                 });
     }
 }
