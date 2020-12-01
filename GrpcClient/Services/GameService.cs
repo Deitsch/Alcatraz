@@ -19,7 +19,10 @@ namespace GrpcClient.Services
         public static int Index;
         private NetworkPlayer me;
         public static PlayerState PlayerState = PlayerState.Unknown;
-        public static bool ItsMyTurn = false;
+        public static bool ItsMyTurn;
+        private string lastMoveToken;
+        private string initGameToken;
+        private string setCurrentPlayerToken;
 
         public GameService(ILogger<GameService> logger)
         {
@@ -29,29 +32,52 @@ namespace GrpcClient.Services
 
         public override Task<InitGameResponse> InitGame(InitGameRequest request, ServerCallContext context)
         {
-            Console.WriteLine("Init Game, wait for your move");
-            NetworkPlayers = request.GameInfo.Players.ToList();
-            Index = request.GameInfo.Index;
-            me = NetworkPlayers[Index];
-            PlayerState = PlayerState.InGame;
-            //_alcatraz.init(request.GameInfo.Players.Count, _index);
+            if (initGameToken != request.Id)
+            {
+                Console.WriteLine("Init Game, wait for your move");
+                NetworkPlayers = request.GameInfo.Players.ToList();
+                Index = request.GameInfo.Index;
+                me = NetworkPlayers[Index];
+                PlayerState = PlayerState.InGame;
+                //_alcatraz.init(request.GameInfo.Players.Count, _index);
+            }
+            else
+            {
+                Console.WriteLine("Received init more than once, so doing nothing");
+            }
+           
             return Task.FromResult(new InitGameResponse());
         }
 
         public override Task<SetCurrentPlayerResponse> SetCurrentPlayer(SetCurrentPlayerRequest request, ServerCallContext context)
         {
-            Console.WriteLine($"It's your turn {me.Name}!");
-            ItsMyTurn = true;
+            if (initGameToken != request.Id)
+            {
+                Console.WriteLine($"It's your turn {me.Name}!");
+                ItsMyTurn = true;
+            }
+            else
+            {
+                Console.WriteLine("Received init more than once, so doing nothing");
+            }
             return Task.FromResult(new SetCurrentPlayerResponse());
         }
 
-        private string lastMove;
         public override Task<MakeMoveResponse> MakeMove(MakeMoveRequest request, ServerCallContext context)
         {
-            Console.WriteLine($"{request.MoveInfo.PlayerName} did this move x:{request.MoveInfo.Prisoner.NewPoint.X} y:{request.MoveInfo.Prisoner.NewPoint.Y}");
-            var alreadyExecuted = lastMove == request.MoveInfo.Id;
-            //request.MoveInfo.PlayerName
-            //request.MoveInfo.Prisoner.p
+            //check idempotency token
+            if (lastMoveToken != request.MoveInfo.Id)
+            {
+                //execute move
+                Console.WriteLine($"{request.MoveInfo.PlayerName} did this move x:{request.MoveInfo.Prisoner.NewPoint.X} y:{request.MoveInfo.Prisoner.NewPoint.Y}");
+                lastMoveToken = request.MoveInfo.Id;
+            }
+            else
+            {
+                //already done, other player has not received
+                Console.WriteLine("Received a move more than once, so doing nothing");
+            }
+            
             return Task.FromResult(new MakeMoveResponse());
         }
     }

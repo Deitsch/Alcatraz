@@ -52,7 +52,6 @@ namespace RegistrationServer.Services
                     try
                     {
                         gameInfo.Index = index;
-                        AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
                         var channel = GrpcChannel.ForAddress($"http://{player.Ip}:{player.Port}");
                         using (channel)
                         {
@@ -80,7 +79,7 @@ namespace RegistrationServer.Services
                 allGood = true;
                 try
                 {
-                    AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                    
                     using var c = GrpcChannel.ForAddress($"http://{firstPlayer.Ip}:{firstPlayer.Port}");
                     var gClient = new Game.Proto.Game.GameClient(c);
                     gClient.SetCurrentPlayer(new SetCurrentPlayerRequest());

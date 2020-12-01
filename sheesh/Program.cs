@@ -34,7 +34,7 @@ namespace Client
             var webHost = CreateHostBuilder(args,port).Build();
             webHost.Start();
 
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+            
             // The port number(5001) must match the port of the gRPC server.
             using var channel = GrpcChannel.ForAddress("http://localhost:5001");
             gameClient = new Client.Game.Proto.Game.GameClient(channel);

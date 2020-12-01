@@ -8,13 +8,15 @@ service Game {
 }
 
 message InitGameRequest{
-	GameInfo gameInfo = 1;
+	string id = 1;
+	GameInfo gameInfo = 2;
 }
 
 message InitGameResponse{
 }
 
 message SetCurrentPlayerRequest{
+	string id = 1;
 }
 
 message SetCurrentPlayerResponse{

@@ -65,6 +65,9 @@ namespace GrpcClient
                     case "move":
                         DoMove();
                         break;
+                    //case "win":
+                    //    DoMove();
+                    //    break;
                     default:
                         Console.WriteLine("Invalid input");
                         break;
@@ -113,7 +116,7 @@ namespace GrpcClient
                 allGood = true;
                 try
                 {
-                    AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                    
                     using var c = GrpcChannel.ForAddress($"http://{nextPlayer.Ip}:{nextPlayer.Port}");
                     var gClient = new Game.Proto.Game.GameClient(c);
                     gClient.SetCurrentPlayer(new SetCurrentPlayerRequest());
