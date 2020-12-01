@@ -1,15 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using RegistrationServer.Listener;
+using RegistrationServer.Repositories;
 using RegistrationServer.Services;
 using RegistrationServer.Spread;
 using RegistrationServer.Spread.Interface;
+using RegistrationServer.Spread.Operations;
+using System;
+using System.Threading;
 
 namespace RegistrationServer
 {
@@ -20,13 +21,22 @@ namespace RegistrationServer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddGrpc();
-            services.AddSingleton<ISpreadConn, SpreadConn>();
-            services.AddSingleton<LobbyService>();
+            services.AddSingleton<ISpreadService, SpreadService>();
+            services.AddSingleton<ISpreadConnectionWrapper, SpreadConnectionWrapper>();
+            services.AddSingleton<IOperationManager, OperationManager>();
+            services.AddSingleton<MessageListener>();
             services.AddSingleton<GameService>();
+            services.AddSingleton<LobbyService>();
+            services.AddSingleton<LobbyRepository>();
+            services.AddSingleton<CreateLobbyOperation>();
+            services.AddSingleton<GetLobbiesOperation>();
+            services.AddSingleton<JoinLobbyOperation>();
+            services.AddSingleton<LeaveLobbyOperation>();
+            services.AddSingleton<RequestGameStartOperation>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ISpreadConnectionWrapper connection, ISpreadService spreadService, IOperationManager operationManager)
         {
             if (env.IsDevelopment())
             {
@@ -45,6 +55,11 @@ namespace RegistrationServer
                     await context.Response.WriteAsync("Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
                 });
             });
+
+            connection.Connect(ConfigFile.SPREAD_ADDRESS, ConfigFile.SPREAD_PORT, Guid.NewGuid().ToString(), ConfigFile.SPREAD_PRIORITY, ConfigFile.SPREAD_GROUP_MEMBERSHIP);
+            operationManager.AddOperationListeners();
+            Thread thread = new Thread(() => spreadService.Run());
+            thread.Start();
         }
     }
 }

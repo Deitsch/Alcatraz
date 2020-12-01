@@ -13,13 +13,10 @@ namespace RegistrationServer.Services
     public class GameService : Game.Proto.Game.GameBase
     {
         private readonly ILogger<GameService> _logger;
-        private readonly ISpreadConn spreadConn;
 
-
-        public GameService(ILogger<GameService> logger, ISpreadConn spreadConn)
+        public GameService(ILogger<GameService> logger)
         {
             _logger = logger;
-            this.spreadConn = spreadConn;
         }
 
 
@@ -36,8 +33,8 @@ namespace RegistrationServer.Services
             SetNextPlayerReliable(firstPlayer);
             Console.WriteLine("Game started!");
 
-            var lobbyToDelete = LobbyService.Lobbies.Single(l => l.Id == lobby.Id);
-            LobbyService.Lobbies.Remove(lobbyToDelete);
+            //var lobbyToDelete = LobbyService.Lobbies.Single(l => l.Id == lobby.Id);
+            //LobbyService.Lobbies.Remove(lobbyToDelete);
         }
 
         private static void InitGameReliable(LobbyInfo lobby, GameInfo gameInfo)
@@ -59,7 +56,7 @@ namespace RegistrationServer.Services
                             gameClient.InitGame(new InitGameRequest {GameInfo = gameInfo});
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         Console.WriteLine("Some Player did not respond -> retry in 1000 ms");
                         allGood = false;
@@ -84,7 +81,7 @@ namespace RegistrationServer.Services
                     var gClient = new Game.Proto.Game.GameClient(c);
                     gClient.SetCurrentPlayer(new SetCurrentPlayerRequest());
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     Console.WriteLine("Waiting for first Player to respond -> retry in 1000 ms");
                     allGood = false;

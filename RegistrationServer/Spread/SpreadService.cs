@@ -1,51 +1,119 @@
-/*
- * The Spread Toolkit.
- *     
- * The contents of this file are subject to the Spread Open-Source
- * License, Version 1.0 (the ``License''); you may not use
- * this file except in compliance with the License.  You may obtain a
- * copy of the License at:
- *
- * http://www.spread.org/license/
- *
- * or in the file ``license.txt'' found in this distribution.
- *
- * Software distributed under the License is distributed on an AS IS basis, 
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License 
- * for the specific language governing rights and limitations under the 
- * License.
- *
- * The Creators of Spread are:
- *  Yair Amir, Michal Miskin-Amir, Jonathan Stanton.
- *
- *  Copyright (C) 1993-2001 Spread Concepts LLC <spread@spreadconcepts.com>
- *
- *  All Rights Reserved.
- *
- * Major Contributor(s):
- * ---------------
- *    Dan Schoenblum   dansch@cnds.jhu.edu - Java Interface Developer.
- *    John Schultz     jschultz@cnds.jhu.edu - contribution to process group membership.
- *    Theo Schlossnagle theos@cnds.jhu.edu - Perl library and Skiplists.
- *
- */
-
-using System;
-using System.Threading;
+﻿using RegistrationServer.Listener;
+using RegistrationServer.Spread.Enums;
+using RegistrationServer.Spread.Interface;
+using RegistrationServer.utils;
 using spread;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace RegistrationServer
+namespace RegistrationServer.Spread
 {
-
-	public class recThread
+    public class SpreadService : ISpreadService
 	{
-		private SpreadConnection connection;
-		public bool threadSuspended;
+        readonly List<string> groupMembers = new List<string>();
 
-		public recThread(SpreadConnection aConn)
+		public int GroupMemberCounter { get => groupMembers.Count; }
+
+        public bool IsPrimary
+        {
+			get => primaryName == UserName;
+        }
+
+		public string UserName
 		{
-			connection = aConn;
+			get => connection.UserName;
 		}
+
+		private bool PrimaryLeft
+		{
+			get => !groupMembers.Contains(primaryName);
+		}
+
+		private string primaryName;
+
+        private readonly ISpreadConnectionWrapper connection;
+        private readonly MessageListener messageListener;
+
+        public SpreadService(ISpreadConnectionWrapper connection, MessageListener messageListener)
+		{ 
+            this.connection = connection;
+            this.messageListener = messageListener;
+        }
+
+        public void Run()
+        {
+			messageListener.Receive += (sender, e) => HandleMessage(e.Message);
+
+			while (true)
+            {
+				messageListener.Listen();
+            }
+        }
+
+		private void HandleMessage(SpreadMessage message)
+		{
+			if (message.IsMembership)
+			{
+				DisplayMessage(message);
+				MembershipInfo info = message.MembershipInfo;
+				UpdateList(info.Members);
+
+				if (info.IsCausedByJoin)
+				{
+					if (IsPrimary)
+						SendMulticast(MulticastType.NewPrimary, UserName);
+
+					if (info.Members.Length == 1)
+						primaryName = UserName;
+
+				}
+				else if (info.IsCausedByLeave || info.IsCausedByDisconnect)
+				{
+					if (PrimaryLeft && IAmNewPrimary())
+						SendMulticast(MulticastType.NewPrimary, UserName);
+				}
+			}
+			else
+			{
+				switch (message.Type)
+				{
+					case (short)MulticastType.NewPrimary:
+						primaryName = message.Data.DecodeToString();
+						Console.WriteLine("New Primary was set: " + primaryName);
+						break;
+				}
+			}
+		}
+
+		private void UpdateList(SpreadGroup[] actualMembers)
+		{
+			groupMembers.Clear();
+			groupMembers.AddRange(actualMembers.Select(m => m.ToString().Trim('#').Substring(0, 8)));
+		}
+
+		private bool IAmNewPrimary()
+		{
+			return UserName == groupMembers.Max();
+		}
+
+        public void SendMulticast(MulticastType multicastType, string data)
+		{
+			SendMulticast(multicastType, data.EncodeToByteArray());
+		}
+
+		public void SendMulticast(MulticastType multicastType,byte[] data)
+		{
+			var msg = new SpreadMessage
+			{
+				Data = data,
+				Type = (short)multicastType
+			};
+			msg.AddGroup(connection.SpreadGroup);
+			msg.IsSafe = true;
+			connection.SpreadConnection.Multicast(msg);
+		}
+
 		private void DisplayMessage(SpreadMessage msg)
 		{
 			try
@@ -171,6 +239,10 @@ namespace RegistrationServer
 				else
 				{
 					Console.WriteLine("Message is of unknown type: " + msg.ServiceType);
+					byte[] data = msg.Data;
+					Console.WriteLine("The data is " + data.Length + " bytes.");
+
+					Console.WriteLine("The message is: " + System.Text.Encoding.ASCII.GetString(data));
 				}
 			}
 			catch (Exception e)
@@ -179,31 +251,5 @@ namespace RegistrationServer
 				Environment.Exit(1);
 			}
 		}
-
-		public void run()
-		{
-			while (true)
-			{
-				try
-				{
-					DisplayMessage(connection.Receive());
-
-					if (threadSuspended)
-					{
-						lock (this)
-						{
-							while (threadSuspended)
-							{
-								Monitor.Wait(this);
-							}
-						}
-					}
-				}
-				catch (Exception e)
-				{
-					Console.WriteLine(e);
-				}
-			}
-		}
-	}
+    }
 }
