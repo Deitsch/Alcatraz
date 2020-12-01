@@ -2,10 +2,10 @@
 {
     public enum OperationType
     {
-        NewPrimary = 1000,
+        NewPrimary,
         CreateLobby,
         JoinLobby,
         LeaveLobby,
-        RequestGameStart
+        DeleteLobby
     }
 }

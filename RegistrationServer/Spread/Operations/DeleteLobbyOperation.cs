@@ -13,7 +13,7 @@ namespace RegistrationServer.Spread
         private readonly LobbyRepository lobbyRepository;
 
         public DeleteLobbyOperation(MessageListener listener, ISpreadService spreadService, LobbyRepository lobbyRepository)
-            : base(OperationType.RequestGameStart, listener, spreadService)
+            : base(OperationType.DeleteLobby, listener, spreadService)
         {
             this.lobbyRepository = lobbyRepository;
         }

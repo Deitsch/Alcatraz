@@ -158,14 +158,14 @@ namespace RegistrationServer.Services
 
             var spreadDto = new SpreadDto
             {
-                Type = OperationType.LeaveLobby,
+                Type = OperationType.DeleteLobby,
                 OriginalSender = spreadService.UserName,
                 LobbyId = lobbyId
             };
 
             try
             {
-                deleteLobbyOperation.Execute(spreadDto, OperationType.RequestGameStart);
+                deleteLobbyOperation.Execute(spreadDto, OperationType.DeleteLobby);
             }
             catch (Exception e)
             {
