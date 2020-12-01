@@ -48,9 +48,9 @@ namespace RegistrationServer.Spread
             if (operationType != message.GetOperationType())
                 return;
 
-            switch (message.Type)
+            switch ((MulticastType)message.Type)
             {
-                case (short)MulticastType.ToPrimary:
+                case MulticastType.ToPrimary:
                     if (spreadService.IsPrimary)
                     {
                         Console.WriteLine("Received on Primary");
@@ -63,7 +63,7 @@ namespace RegistrationServer.Spread
                     }
                     break;
 
-                case (short)MulticastType.ToReplicas:
+                case MulticastType.ToReplicas:
                     if (!spreadService.IsPrimary)
                     {
                         Console.WriteLine("Received on Replica");
@@ -75,30 +75,30 @@ namespace RegistrationServer.Spread
                     }
                     break;
 
-                case (short)MulticastType.AcknToPrimary:
+                case MulticastType.AcknToPrimary:
                     if (spreadService.IsPrimary)
                     {
                         Console.WriteLine("Received ACKN from Replica on Primary");
 
-                        ++acknCount[message.GetLobbyId()];
+                        ++acknCount[message.LobbyId()];
                     }
                     break;
 
-                case (short)MulticastType.ToOriginalSenderSuccessfully:
-                    if (spreadService.UserName == message.GetOriginalSender())
+                case MulticastType.ToOriginalSenderSuccessfully:
+                    if (spreadService.UserName == message.OriginalSender())
                     {
                         Console.WriteLine("Received 'successfully' from primary on original sender");
 
-                        receivedFromPrimary[message.GetLobbyId()] = SuccessType.Successfully;
+                        receivedFromPrimary[message.LobbyId()] = SuccessType.Successfully;
                     }
                     break;
 
-                case (short)MulticastType.ToOriginalSenderNotSuccessfully:
-                    if (spreadService.UserName == message.GetOriginalSender())
+                case MulticastType.ToOriginalSenderNotSuccessfully:
+                    if (spreadService.UserName == message.OriginalSender())
                     {
                         Console.WriteLine("Received 'not successfully' from primary on original sender");
 
-                        receivedFromPrimary[message.GetLobbyId()] = SuccessType.NotSuccessfully;
+                        receivedFromPrimary[message.LobbyId()] = SuccessType.NotSuccessfully;
                     }
                     break;
             }
@@ -107,7 +107,7 @@ namespace RegistrationServer.Spread
         private void CollectAckn(SpreadMessage message)
         {
             bool allAcknReceived = false;
-            string lobbyId = message.GetLobbyId();
+            string lobbyId = message.LobbyId();
             acknCount.Add(lobbyId, 0);
 
             Stopwatch sw = new Stopwatch();

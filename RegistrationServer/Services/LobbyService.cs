@@ -6,6 +6,7 @@ using RegistrationServer.Spread.Enums;
 using RegistrationServer.Spread.Interface;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RegistrationServer.Services
@@ -43,18 +44,15 @@ namespace RegistrationServer.Services
 
         public override Task<GetLobbiesResponse> GetLobbies(GetLobbiesRequest request, ServerCallContext context)
         {
+            var lobbies = getLobbiesOperation.Execute();
+
             var getLobbiesResponse = new GetLobbiesResponse();
-            List<LobbyInfo> lobbies;
-
-            lobbies = getLobbiesOperation.Execute();
-
             getLobbiesResponse.Lobbies.AddRange(lobbies);
             return Task.FromResult(getLobbiesResponse);
         }
 
         public override Task<JoinLobbyResponse> CreateLobby(CreateLobbyRequest request, ServerCallContext context)
         {
-            LobbyInfo lobby;
             string lobbyId = Guid.NewGuid().ToString();
 
             var spreadDto = new SpreadDto
@@ -67,18 +65,32 @@ namespace RegistrationServer.Services
 
             createLobbyOperation.Execute(spreadDto, OperationType.CreateLobby);
 
-            lobby = lobbyRepository.FindById(lobbyId);
-
             var joinLobbyResponse = new JoinLobbyResponse
             {
-                Lobby = lobby
+                Lobby = lobbyRepository.FindById(lobbyId)
             };
             return Task.FromResult(joinLobbyResponse);
         }
 
         public override Task<JoinLobbyResponse> JoinLobby(JoinLobbyRequest request, ServerCallContext context)
         {
-            LobbyInfo lobby;
+            var lobbyToJoin = lobbyRepository.FindById(request.LobbyId);
+
+            if (lobbyToJoin == null)
+            {
+                throw new RpcException(new Status(StatusCode.NotFound,
+                    $"Lobby with id {request.LobbyId} not found"));
+            }
+            if (lobbyToJoin.Players.Any(p => p.Name == request.Player.Name))
+            {
+                throw new RpcException(new Status(StatusCode.AlreadyExists,
+                    $"A player with that name is already in lobby {request.LobbyId}"));
+            }
+            if (lobbyToJoin.Players.Count == 4)
+            {
+                throw new RpcException(new Status(StatusCode.FailedPrecondition,
+                    $"Lobby with id {request.LobbyId} is already full"));
+            }
 
             var spreadDto = new SpreadDto
             {
@@ -90,17 +102,28 @@ namespace RegistrationServer.Services
 
             joinLobbyOperation.Execute(spreadDto, OperationType.JoinLobby);
 
-            lobby = lobbyRepository.FindById(request.LobbyId);
-
             var joinLobbyResponse = new JoinLobbyResponse
             {
-                Lobby = lobby
+                Lobby = lobbyRepository.FindById(request.LobbyId)
             };
             return Task.FromResult(joinLobbyResponse);
         }
 
         public override Task<LeaveLobbyResponse> LeaveLobby(LeaveLobbyRequest request, ServerCallContext context)
         {
+            var lobbyToLeave = lobbyRepository.FindById(request.LobbyId);
+            
+            if (lobbyToLeave == null)
+            {
+                throw new RpcException(new Status(StatusCode.NotFound,
+                    $"Lobby with id {request.LobbyId} not found"));
+            }
+            if (!lobbyToLeave.Players.Contains(request.Player))
+            {
+                throw new RpcException(new Status(StatusCode.NotFound,
+                    $"Player {request.Player.Name} not found in Lobby {request.LobbyId}"));
+            }
+
             var spreadDto = new SpreadDto
             {
                 Type = OperationType.LeaveLobby,
@@ -116,16 +139,15 @@ namespace RegistrationServer.Services
 
         public override Task<RequestGameStartResponse> RequestGameStart(RequestGameStartRequest request, ServerCallContext context)
         {
-            var lobbyId = request.LobbyId;
-            var lobby = lobbyRepository.FindById(lobbyId);
+            var lobby = lobbyRepository.FindById(request.LobbyId);
 
             if (lobby == null)
             {
-                throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {lobbyId} not found"));
+                throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
             }
             if (lobby.Players.Count < 2)
             {
-                throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Lobby with id {lobbyId} has not enough players to start"));
+                throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Lobby with id {request.LobbyId} has not enough players to start"));
             }
 
             gameService.StartGame(lobby);
@@ -134,7 +156,7 @@ namespace RegistrationServer.Services
             {
                 Type = OperationType.DeleteLobby,
                 OriginalSender = spreadService.UserName,
-                LobbyId = lobbyId
+                LobbyId = request.LobbyId
             };
 
             deleteLobbyOperation.Execute(spreadDto, OperationType.DeleteLobby);

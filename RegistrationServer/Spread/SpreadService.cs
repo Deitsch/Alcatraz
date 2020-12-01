@@ -1,5 +1,4 @@
 ﻿using RegistrationServer.Listener;
-using RegistrationServer.Spread.Enums;
 using RegistrationServer.Spread.Interface;
 using RegistrationServer.utils;
 using spread;
@@ -55,7 +54,7 @@ namespace RegistrationServer.Spread
 		{
 			if (message.IsMembership)
 			{
-				DisplayMessage(message);
+				DisplayMembershipMessage(message);
 				MembershipInfo info = message.MembershipInfo;
 				UpdateList(info.Members);
 
@@ -76,9 +75,9 @@ namespace RegistrationServer.Spread
 			}
 			else
 			{
-				switch (message.Type)
+				switch ((MulticastType)message.Type)
 				{
-					case (short)MulticastType.NewPrimary:
+					case MulticastType.NewPrimary:
 						primaryName = message.Data.DecodeToString();
 						Console.WriteLine("New Primary was set: " + primaryName);
 						break;
@@ -114,142 +113,17 @@ namespace RegistrationServer.Spread
 			connection.SpreadConnection.Multicast(msg);
 		}
 
-		private void DisplayMessage(SpreadMessage msg)
+		private void DisplayMembershipMessage(SpreadMessage msg)
 		{
-			try
-			{
-				Console.WriteLine("*****************RECTHREAD Received Message************");
-				if (msg.IsRegular)
-				{
-					Console.Write("Received a ");
-					if (msg.IsUnreliable)
-						Console.Write("UNRELIABLE");
-					else if (msg.IsReliable)
-						Console.Write("RELIABLE");
-					else if (msg.IsFifo)
-						Console.Write("FIFO");
-					else if (msg.IsCausal)
-						Console.Write("CAUSAL");
-					else if (msg.IsAgreed)
-						Console.Write("AGREED");
-					else if (msg.IsSafe)
-						Console.Write("SAFE");
-					Console.WriteLine(" message.");
+			SpreadGroup[] groups = msg.Groups;
 
-					Console.WriteLine("Sent by  " + msg.Sender + ".");
+			Console.WriteLine("");
+			Console.WriteLine("Received membership message");
+			Console.WriteLine("Members:");
+			for (int i = 0; i < groups.Length; i++)
+				Console.WriteLine("  " + groups[i]);
 
-					Console.WriteLine("Type is " + msg.Type + ".");
-
-					if (msg.EndianMismatch == true)
-						Console.WriteLine("There is an endian mismatch.");
-					else
-						Console.WriteLine("There is no endian mismatch.");
-
-					SpreadGroup[] groups = msg.Groups;
-					Console.WriteLine("To " + groups.Length + " groups.");
-
-					byte[] data = msg.Data;
-					Console.WriteLine("The data is " + data.Length + " bytes.");
-
-					Console.WriteLine("The message is: " + System.Text.Encoding.ASCII.GetString(data));
-				}
-				else if (msg.IsMembership)
-				{
-					MembershipInfo info = msg.MembershipInfo;
-
-					if (info.IsRegularMembership)
-					{
-						SpreadGroup[] groups = msg.Groups;
-
-						Console.WriteLine("Received a REGULAR membership.");
-						Console.WriteLine("For group " + info.Group + ".");
-						Console.WriteLine("With " + groups.Length + " members.");
-						Console.WriteLine("I am member " + msg.Type + ".");
-						for (int i = 0; i < groups.Length; i++)
-							Console.WriteLine("  " + groups[i]);
-
-						Console.WriteLine("Group ID is " + info.GroupID);
-
-						Console.Write("Due to ");
-						if (info.IsCausedByJoin)
-						{
-							Console.WriteLine("the JOIN of " + info.Joined + ".");
-						}
-						else if (info.IsCausedByLeave)
-						{
-							Console.WriteLine("the LEAVE of " + info.Left + ".");
-						}
-						else if (info.IsCausedByDisconnect)
-						{
-							Console.WriteLine("the DISCONNECT of " + info.Disconnected + ".");
-						}
-						else if (info.IsCausedByNetwork)
-						{
-							SpreadGroup[] stayed = info.Stayed;
-							Console.WriteLine("NETWORK change.");
-							Console.WriteLine("VS set has " + stayed.Length + " members:");
-							for (int i = 0; i < stayed.Length; i++)
-								Console.WriteLine("  " + stayed[i]);
-						}
-					}
-					else if (info.IsTransition)
-					{
-						Console.WriteLine("Received a TRANSITIONAL membership for group " + info.Group);
-					}
-					else if (info.IsSelfLeave)
-					{
-						Console.WriteLine("Received a SELF-LEAVE message for group " + info.Group);
-					}
-				}
-				else if (msg.IsReject)
-				{
-					// Received a Reject message 
-					Console.Write("Received a ");
-					if (msg.IsUnreliable)
-						Console.Write("UNRELIABLE");
-					else if (msg.IsReliable)
-						Console.Write("RELIABLE");
-					else if (msg.IsFifo)
-						Console.Write("FIFO");
-					else if (msg.IsCausal)
-						Console.Write("CAUSAL");
-					else if (msg.IsAgreed)
-						Console.Write("AGREED");
-					else if (msg.IsSafe)
-						Console.Write("SAFE");
-					Console.WriteLine(" REJECTED message.");
-
-					Console.WriteLine("Sent by  " + msg.Sender + ".");
-
-					Console.WriteLine("Type is " + msg.Type + ".");
-
-					if (msg.EndianMismatch == true)
-						Console.WriteLine("There is an endian mismatch.");
-					else
-						Console.WriteLine("There is no endian mismatch.");
-
-					SpreadGroup[] groups = msg.Groups;
-					Console.WriteLine("To " + groups.Length + " groups.");
-
-					byte[] data = msg.Data;
-					Console.WriteLine("The data is " + data.Length + " bytes.");
-
-					Console.WriteLine("The message is: " + System.Text.Encoding.ASCII.GetString(data));
-				}
-				else
-				{
-					Console.WriteLine("Message is of unknown type: " + msg.ServiceType);
-					byte[] data = msg.Data;
-					Console.WriteLine("The data is " + data.Length + " bytes.");
-
-					Console.WriteLine("The message is: " + System.Text.Encoding.ASCII.GetString(data));
-				}
-			}
-			catch (Exception e)
-			{
-				Console.WriteLine(e);
-				Environment.Exit(1);
-			}
+			Console.WriteLine("");
 		}
     }
 }

@@ -20,7 +20,7 @@ namespace RegistrationServer.Spread
 
         protected override void SpecificOperation(SpreadMessage message)
         {
-            lobbyRepository.Save(message.GetLobbyId(), message.GetPlayer());
+            lobbyRepository.Save(message.LobbyId(), message.Player());
         }
     }
 }
