@@ -20,6 +20,7 @@ namespace GrpcClient
             $"join -> Join Lobby{Environment.NewLine}" +
             $"leave -> Leave Lobby{Environment.NewLine}" +
             $"start -> Start Game{Environment.NewLine}" +
+            $"move -> Make a move{Environment.NewLine}" +
             $"exit -> Exit";
         private static Lobby.Proto.Lobby.LobbyClient lobbyClient;
         private static Player _player;
