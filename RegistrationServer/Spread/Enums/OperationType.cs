@@ -2,7 +2,6 @@
 {
     public enum OperationType
     {
-        NewPrimary,
         CreateLobby,
         JoinLobby,
         LeaveLobby,
