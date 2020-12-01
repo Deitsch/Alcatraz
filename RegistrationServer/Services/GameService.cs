@@ -26,12 +26,22 @@ namespace RegistrationServer.Services
         public void StartGame(LobbyInfo lobby)
         {
             var gameInfo = new GameInfo();
-            var gameClientList = new List<Game.Proto.Game.GameClient>();
             foreach (var player in lobby.Players)
             {
                 gameInfo.Players.Add(GetPlayer(player));
             }
 
+            InitGameReliable(lobby, gameInfo);
+            var firstPlayer = gameInfo.Players.First();
+            SetNextPlayerReliable(firstPlayer);
+            Console.WriteLine("Game started!");
+
+            var lobbyToDelete = LobbyService.Lobbies.Single(l => l.Id == lobby.Id);
+            LobbyService.Lobbies.Remove(lobbyToDelete);
+        }
+
+        private static void InitGameReliable(LobbyInfo lobby, GameInfo gameInfo)
+        {
             var allGood = false;
             while (!allGood)
             {
@@ -59,12 +69,29 @@ namespace RegistrationServer.Services
                     }
                 }
             }
-            var firstPlayer = gameInfo.Players.First();
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            using var c = GrpcChannel.ForAddress($"http://{firstPlayer.Ip}:{firstPlayer.Port}");
-            var gClient = new Game.Proto.Game.GameClient(c);
-            gClient.SetCurrentPlayer(new SetCurrentPlayerRequest());
-            Console.WriteLine("Game started!");
+        }
+
+
+        private static void SetNextPlayerReliable(Game.Proto.NetworkPlayer firstPlayer)
+        {
+            var allGood = false;
+            while (!allGood)
+            {
+                allGood = true;
+                try
+                {
+                    AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                    using var c = GrpcChannel.ForAddress($"http://{firstPlayer.Ip}:{firstPlayer.Port}");
+                    var gClient = new Game.Proto.Game.GameClient(c);
+                    gClient.SetCurrentPlayer(new SetCurrentPlayerRequest());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    allGood = false;
+                    Thread.Sleep(1000);
+                }
+            }
         }
 
         private RegistrationServer.Game.Proto.NetworkPlayer GetPlayer(Lobby.Proto.NetworkPlayer lobbyPlayer)

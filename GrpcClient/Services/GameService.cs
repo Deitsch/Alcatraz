@@ -14,11 +14,12 @@ namespace GrpcClient.Services
     {
 
         private readonly ILogger<GameService> _logger;
-        private List<NetworkPlayer> _networkPlayers;
+        public static List<NetworkPlayer> NetworkPlayers;
         private readonly Alcatraz.Alcatraz _alcatraz;
-        private int _index;
+        public static int Index;
         private NetworkPlayer me;
-
+        public static PlayerState PlayerState = PlayerState.Unknown;
+        public static bool ItsMyTurn = false;
 
         public GameService(ILogger<GameService> logger)
         {
@@ -29,9 +30,10 @@ namespace GrpcClient.Services
         public override Task<InitGameResponse> InitGame(InitGameRequest request, ServerCallContext context)
         {
             Console.WriteLine("Init Game, wait for your move");
-            _networkPlayers = request.GameInfo.Players.ToList();
-            _index = request.GameInfo.Index;
-            me = _networkPlayers[_index];
+            NetworkPlayers = request.GameInfo.Players.ToList();
+            Index = request.GameInfo.Index;
+            me = NetworkPlayers[Index];
+            PlayerState = PlayerState.InGame;
             //_alcatraz.init(request.GameInfo.Players.Count, _index);
             return Task.FromResult(new InitGameResponse());
         }
@@ -39,55 +41,14 @@ namespace GrpcClient.Services
         public override Task<SetCurrentPlayerResponse> SetCurrentPlayer(SetCurrentPlayerRequest request, ServerCallContext context)
         {
             Console.WriteLine($"It's your turn {me.Name}!");
-            Console.ReadKey();
-            var makeMove = new MakeMoveRequest
-            {
-                MoveInfo =
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    PlayerName = me.Name,
-                    Prisoner = new Prisoner {OldPoint = null, NewPoint = new Point {X = 1, Y = 2},}
-                }
-            };
-            var allGood = false;
-            while (!allGood)
-            {
-                allGood = true;
-                for (var index = 0; index < _networkPlayers.Count; index++)
-                {
-                    var player = _networkPlayers[index];
-                    try
-                    {
-                        AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-                        var channel = GrpcChannel.ForAddress($"http://{player.Ip}:{player.Port}");
-                        using (channel)
-                        {
-                            var gameClient = new Game.Proto.Game.GameClient(channel);
-                            gameClient.MakeMove(makeMove);
-                            //gameClient.InitGame(new InitGameRequest { GameInfo = gameInfo });
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                        allGood = false;
-                        Thread.Sleep(1000);
-                        break;
-                    }
-                }
-            }
-            Console.WriteLine("You made a move!");
-            var nextPlayer = _networkPlayers[(_index + 1) % _networkPlayers.Count];
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            using var c = GrpcChannel.ForAddress($"http://{nextPlayer.Ip}:{nextPlayer.Port}");
-            var gClient = new Game.Proto.Game.GameClient(c);
-            gClient.SetCurrentPlayer(new SetCurrentPlayerRequest());
+            ItsMyTurn = true;
             return Task.FromResult(new SetCurrentPlayerResponse());
         }
 
         private string lastMove;
         public override Task<MakeMoveResponse> MakeMove(MakeMoveRequest request, ServerCallContext context)
         {
+            Console.WriteLine($"{request.MoveInfo.PlayerName} did this move x:{request.MoveInfo.Prisoner.NewPoint.X} y:{request.MoveInfo.Prisoner.NewPoint.Y}");
             var alreadyExecuted = lastMove == request.MoveInfo.Id;
             //request.MoveInfo.PlayerName
             //request.MoveInfo.Prisoner.p

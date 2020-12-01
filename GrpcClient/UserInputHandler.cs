@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using Grpc.Core;
+using Grpc.Net.Client;
+using GrpcClient.Game.Proto;
 using GrpcClient.Lobby.Proto;
+using GrpcClient.Services;
+using PlayerState = GrpcClient.Lobby.Proto.PlayerState;
 
 namespace GrpcClient
 {
@@ -19,12 +24,14 @@ namespace GrpcClient
         private static Lobby.Proto.Lobby.LobbyClient lobbyClient;
         private static Player _player;
         private static string _currentLobbyId;
+        private static Random random;
         private static bool PlayerIsInLobby => _player.PlayerState == PlayerState.InLobby;
-        private static bool PlayerIsInGame => _player.PlayerState == PlayerState.InGame;
+        private static bool PlayerIsInGame => GameService.PlayerState == Game.Proto.PlayerState.InGame;
 
         public UserInputHandler(ChannelBase channel, Player player)
         {
             _player = player;
+            random = new Random();
             lobbyClient = new Lobby.Proto.Lobby.LobbyClient(channel);
         }
 
@@ -32,7 +39,6 @@ namespace GrpcClient
         public void HandleUserInput()
         {
             Console.WriteLine(helpText);
-            Console.Write("Input: ");
             var userInput = Console.ReadLine();
             while (userInput != "exit")
             {
@@ -63,8 +69,6 @@ namespace GrpcClient
                         Console.WriteLine("Invalid input");
                         break;
                 }
-
-                Console.Write("Input: ");
                 userInput = Console.ReadLine();
             }
         }
@@ -73,11 +77,86 @@ namespace GrpcClient
         {
             if (PlayerIsInGame)
             {
-                
+                if (GameService.ItsMyTurn)
+                {
+                    var makeMove = new MakeMoveRequest
+                    {
+                        MoveInfo = new MoveInfo
+                        {
+                            Id = Guid.NewGuid().ToString(),
+                            PlayerName = _player.Name,
+                            Prisoner = new Prisoner {OldPoint = null, NewPoint = new Point {X = random.Next(0,10), Y = random.Next(0, 10) },}
+                        }
+                    };
+                    MakeReliableMove(makeMove);
+                    Console.WriteLine("You made a move!");
+
+                    var nextPlayer = GameService.NetworkPlayers[(GameService.Index + 1) % GameService.NetworkPlayers.Count];
+                    SetNextPlayerReliable(nextPlayer);
+                }
+                else
+                {
+                    Console.WriteLine("It's not your turn");
+                }
             }
             else
             {
                 Console.WriteLine("You are not in a game!");
+            }
+        }
+
+        private static void SetNextPlayerReliable(NetworkPlayer nextPlayer)
+        {
+            var allGood = false;
+            while (!allGood)
+            {
+                allGood = true;
+                try
+                {
+                    AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                    using var c = GrpcChannel.ForAddress($"http://{nextPlayer.Ip}:{nextPlayer.Port}");
+                    var gClient = new Game.Proto.Game.GameClient(c);
+                    gClient.SetCurrentPlayer(new SetCurrentPlayerRequest());
+                    GameService.ItsMyTurn = false;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    allGood = false;
+                    Thread.Sleep(1000);
+                }
+            }
+
+        }
+
+        private static void MakeReliableMove(MakeMoveRequest makeMove)
+        {
+            var allGood = false;
+            while (!allGood)
+            {
+                allGood = true;
+                for (var index = 0; index < GameService.NetworkPlayers.Count; index++)
+                {
+                    var player = GameService.NetworkPlayers[index];
+                    try
+                    {
+                        AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport",
+                            true);
+                        var channel = GrpcChannel.ForAddress($"http://{player.Ip}:{player.Port}");
+                        using (channel)
+                        {
+                            var gameClient = new Game.Proto.Game.GameClient(channel);
+                            gameClient.MakeMove(makeMove);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        allGood = false;
+                        Thread.Sleep(1000);
+                        break;
+                    }
+                }
             }
         }
 
@@ -92,7 +171,7 @@ namespace GrpcClient
         {
             try
             {
-                if (PlayerIsInLobby)
+                if (PlayerIsInLobby && !PlayerIsInGame)
                 {
                     var reply = lobbyClient.LeaveLobby(new LeaveLobbyRequest { LobbyId = lobbyId, Player = player });
                     _currentLobbyId = null;
@@ -130,7 +209,7 @@ namespace GrpcClient
         {
             try
             {
-                if (!PlayerIsInLobby)
+                if (!PlayerIsInLobby && !PlayerIsInGame)
                 {
                     var reply = lobbyClient.CreateLobby(new CreateLobbyRequest { Player = player });
                     _currentLobbyId = reply.Lobby.Id;
@@ -160,7 +239,7 @@ namespace GrpcClient
             
             try
             {
-                if (!PlayerIsInLobby)
+                if (!PlayerIsInLobby && !PlayerIsInGame)
                 {
                     Console.Write("LobbyId: ");
                     var lobbyId = Console.ReadLine();
