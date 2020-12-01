@@ -30,8 +30,6 @@ namespace RegistrationServer.Spread
 			get => !groupMembers.Contains(primaryName);
 		}
 
-		private bool threadSuspended; // probably useless
-
 		private string primaryName;
 
         private readonly ISpreadConnectionWrapper connection;
