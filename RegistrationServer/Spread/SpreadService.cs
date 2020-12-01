@@ -23,7 +23,7 @@ namespace RegistrationServer.Spread
 		public string UserName
 		{
 			get => connection.UserName;
-		} //
+		}
 
 		private bool PrimaryLeft
 		{
