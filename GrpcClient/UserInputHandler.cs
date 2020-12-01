@@ -124,7 +124,7 @@ namespace GrpcClient
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Some Player did not respond -> retry in 1000 ms");
+                    Console.WriteLine("Next Player did not respond -> retry in 1000 ms");
                     allGood = false;
                     Thread.Sleep(1000);
                 }
