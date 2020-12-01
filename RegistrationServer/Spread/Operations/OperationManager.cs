@@ -5,13 +5,13 @@
         private readonly CreateLobbyOperation createLobbyOperation;
         private readonly JoinLobbyOperation joinLobbyOperation;
         private readonly LeaveLobbyOperation leaveLobbyOperation;
-        private readonly RequestGameStartOperation requestGameStartOperation;
+        private readonly DeleteLobbyOperation requestGameStartOperation;
 
         public OperationManager(
             CreateLobbyOperation createLobbyOperation,
             JoinLobbyOperation joinLobbyOperation,
             LeaveLobbyOperation leaveLobbyOperation,
-            RequestGameStartOperation requestGameStartOperation)
+            DeleteLobbyOperation requestGameStartOperation)
         {
             this.createLobbyOperation = createLobbyOperation;
             this.joinLobbyOperation = joinLobbyOperation;

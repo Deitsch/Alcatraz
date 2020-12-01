@@ -19,7 +19,7 @@ namespace RegistrationServer.Services
         private readonly GetLobbiesOperation getLobbiesOperation;
         private readonly JoinLobbyOperation joinLobbyOperation;
         private readonly LeaveLobbyOperation leaveLobbyOperation;
-        private readonly RequestGameStartOperation requestGameStartOperation;
+        private readonly DeleteLobbyOperation deleteLobbyOperation;
 
         public LobbyService(
             ISpreadService spreadService,
@@ -29,7 +29,7 @@ namespace RegistrationServer.Services
             GetLobbiesOperation getLobbiesOperation,
             JoinLobbyOperation joinLobbyOperation,
             LeaveLobbyOperation leaveLobbyOperation,
-            RequestGameStartOperation requestGameStartOperation)
+            DeleteLobbyOperation deleteLobbyOperation)
         {
             this.spreadService = spreadService;
             this.gameService = gameService;
@@ -38,7 +38,7 @@ namespace RegistrationServer.Services
             this.getLobbiesOperation = getLobbiesOperation;
             this.joinLobbyOperation = joinLobbyOperation;
             this.leaveLobbyOperation = leaveLobbyOperation;
-            this.requestGameStartOperation = requestGameStartOperation;
+            this.deleteLobbyOperation = deleteLobbyOperation;
         }
 
         public override Task<GetLobbiesResponse> GetLobbies(GetLobbiesRequest request, ServerCallContext context)
@@ -142,19 +142,36 @@ namespace RegistrationServer.Services
 
         public override Task<RequestGameStartResponse> RequestGameStart(RequestGameStartRequest request, ServerCallContext context)
         {
-            //Console.WriteLine("RequestGamestart request");
-            //var lobby = Lobbies.SingleOrDefault(l => l.Id == request.LobbyId);
-            //if (lobby == null)
-            //{
-            //    throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
-            //}
+            var lobbyId = request.LobbyId;
+            var lobby = lobbyRepository.FindById(lobbyId);
 
-            //if (lobby.Players.Count < 2)
-            //{
-            //    throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Lobby with id {lobby.Id} has not enough players to start"));
-            //}
+            if (lobby == null)
+            {
+                throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {lobbyId} not found"));
+            }
+            if (lobby.Players.Count < 2)
+            {
+                throw new RpcException(new Status(StatusCode.FailedPrecondition, $"Lobby with id {lobbyId} has not enough players to start"));
+            }
 
-            //_gameService.StartGame(lobby);
+            gameService.StartGame(lobby);
+
+            var spreadDto = new SpreadDto
+            {
+                Type = OperationType.LeaveLobby,
+                OriginalSender = spreadService.UserName,
+                LobbyId = lobbyId
+            };
+
+            try
+            {
+                deleteLobbyOperation.Execute(spreadDto, OperationType.RequestGameStart);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+
             return Task.FromResult(new RequestGameStartResponse());
         }
     }

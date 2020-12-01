@@ -32,7 +32,7 @@ namespace RegistrationServer
             services.AddSingleton<GetLobbiesOperation>();
             services.AddSingleton<JoinLobbyOperation>();
             services.AddSingleton<LeaveLobbyOperation>();
-            services.AddSingleton<RequestGameStartOperation>();
+            services.AddSingleton<DeleteLobbyOperation>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

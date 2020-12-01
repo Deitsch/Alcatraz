@@ -2,15 +2,17 @@
 using RegistrationServer.Repositories;
 using RegistrationServer.Spread.Enums;
 using RegistrationServer.Spread.Interface;
+using RegistrationServer.utils;
 using spread;
+using System;
 
 namespace RegistrationServer.Spread
 {
-    public class RequestGameStartOperation : PassiveReplicationOperation
+    public class DeleteLobbyOperation : PassiveReplicationOperation
     {
         private readonly LobbyRepository lobbyRepository;
 
-        public RequestGameStartOperation(MessageListener listener, ISpreadService spreadService, LobbyRepository lobbyRepository)
+        public DeleteLobbyOperation(MessageListener listener, ISpreadService spreadService, LobbyRepository lobbyRepository)
             : base(OperationType.RequestGameStart, listener, spreadService)
         {
             this.lobbyRepository = lobbyRepository;
@@ -18,7 +20,14 @@ namespace RegistrationServer.Spread
 
         protected override void SpecificOperation(SpreadMessage message)
         {
-            // ToDo
+            try
+            {
+                lobbyRepository.Delete(message.GetLobbyId());
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
         }
     }
 }

@@ -2,9 +2,7 @@ using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using RegistrationServer.Game.Proto;
 using RegistrationServer.Lobby.Proto;
-using RegistrationServer.Spread.Interface;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
@@ -19,7 +17,6 @@ namespace RegistrationServer.Services
             _logger = logger;
         }
 
-
         public void StartGame(LobbyInfo lobby)
         {
             var gameInfo = new GameInfo();
@@ -32,9 +29,6 @@ namespace RegistrationServer.Services
             var firstPlayer = gameInfo.Players.First();
             SetNextPlayerReliable(firstPlayer);
             Console.WriteLine("Game started!");
-
-            //var lobbyToDelete = LobbyService.Lobbies.Single(l => l.Id == lobby.Id);
-            //LobbyService.Lobbies.Remove(lobbyToDelete);
         }
 
         private static void InitGameReliable(LobbyInfo lobby, GameInfo gameInfo)
@@ -66,7 +60,6 @@ namespace RegistrationServer.Services
                 }
             }
         }
-
 
         private static void SetNextPlayerReliable(Game.Proto.NetworkPlayer firstPlayer)
         {

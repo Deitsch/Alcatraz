@@ -37,6 +37,17 @@ namespace RegistrationServer.Repositories
             Console.WriteLine("Saved Lobby with Id: " + lobbyId);
         }
 
+        public void Delete(string lobbyId)
+        {
+            lobbies.Remove(FindById(lobbyId));
+        }
+
+        public void Delete(LobbyInfo lobby)
+        {
+            Console.WriteLine("Deleted Lobby with Id: " + lobby.Id);
+            lobbies.Remove(lobby);
+        }
+
         public void JoinLobby(string lobbyId, NetworkPlayer player)
         {
             var lobbyToJoin = FindById(lobbyId);
@@ -84,7 +95,7 @@ namespace RegistrationServer.Repositories
 
             if (lobbyToLeave.Players.Count == 0)
             {
-                lobbies.Remove(lobbyToLeave);
+                Delete(lobbyId);
                 Console.WriteLine($"Deleted Lobby with Id: {lobbyId}");
             }
         }
