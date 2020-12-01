@@ -42,6 +42,7 @@ namespace RegistrationServer.Services
                     var player = lobby.Players[index];
                     try
                     {
+                        AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
                         gameInfo.Index = index;
                         var channel = GrpcChannel.ForAddress($"http://{player.Ip}:{player.Port}");
                         using (channel)
@@ -50,7 +51,7 @@ namespace RegistrationServer.Services
                             gameClient.InitGame(new InitGameRequest {GameInfo = gameInfo});
                         }
                     }
-                    catch (Exception)
+                    catch (Exception e)
                     {
                         Console.WriteLine("Some Player did not respond -> retry in 1000 ms");
                         allGood = false;
