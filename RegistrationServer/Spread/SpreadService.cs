@@ -1,11 +1,11 @@
 ﻿using RegistrationServer.Listener;
+using RegistrationServer.Spread.Enums;
 using RegistrationServer.Spread.Interface;
 using RegistrationServer.utils;
 using spread;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 
 namespace RegistrationServer.Spread
 {
@@ -97,17 +97,17 @@ namespace RegistrationServer.Spread
 			return UserName == groupMembers.Max();
 		}
 
-        public void SendMulticast(MulticastType type, string data)
+        public void SendMulticast(MulticastType multicastType, string data)
 		{
-			SendMulticast(type, data.EncodeToByteArray());
+			SendMulticast(multicastType, data.EncodeToByteArray());
 		}
 
-		public void SendMulticast(MulticastType type, byte[] data)
+		public void SendMulticast(MulticastType multicastType,byte[] data)
 		{
 			var msg = new SpreadMessage
 			{
 				Data = data,
-				Type = (short)type
+				Type = (short)multicastType
 			};
 			msg.AddGroup(connection.SpreadGroup);
 			msg.IsSafe = true;

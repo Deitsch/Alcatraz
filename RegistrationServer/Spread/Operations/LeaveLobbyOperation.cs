@@ -1,21 +1,19 @@
 ﻿using RegistrationServer.Listener;
-using RegistrationServer.Lobby.Proto;
 using RegistrationServer.Repositories;
 using RegistrationServer.Spread.Enums;
 using RegistrationServer.Spread.Interface;
 using RegistrationServer.utils;
 using spread;
 using System;
-using System.Text.Json;
 
 namespace RegistrationServer.Spread
 {
-    public class CreateLobbyOperation : PassiveReplicationOperation
+    public class LeaveLobbyOperation : PassiveReplicationOperation
     {
         private readonly LobbyRepository lobbyRepository;
 
-        public CreateLobbyOperation(MessageListener listener, ISpreadService spreadService, LobbyRepository lobbyRepository) 
-            : base(OperationType.CreateLobby, listener, spreadService)
+        public LeaveLobbyOperation(MessageListener listener, ISpreadService spreadService, LobbyRepository lobbyRepository)
+            : base(OperationType.LeaveLobby, listener, spreadService)
         {
             this.lobbyRepository = lobbyRepository;
         }
@@ -24,7 +22,7 @@ namespace RegistrationServer.Spread
         {
             try
             {
-                lobbyRepository.Save(message.GetLobbyId(), message.GetPlayer());
+                lobbyRepository.LeaveLobby(message.GetLobbyId(), message.GetPlayer());
             }
             catch (Exception e)
             {

@@ -1,6 +1,8 @@
 ﻿using RegistrationServer.Lobby.Proto;
 using RegistrationServer.Spread;
+using RegistrationServer.Spread.Enums;
 using spread;
+using System;
 using System.Text;
 using System.Text.Json;
 
@@ -14,10 +16,31 @@ namespace RegistrationServer.utils
         public static byte[] EncodeToByteArray(this string s)
             => Encoding.ASCII.GetBytes(s);
 
-        public static LobbyInfo GetLobby(this SpreadMessage msg)
-            => JsonSerializer.Deserialize<LobbyDto>(msg.Data.DecodeToString()).LobbyInfo;
+        private static SpreadDto GetSpreadDto(this SpreadMessage msg)
+            => JsonSerializer.Deserialize<SpreadDto>(msg.Data.DecodeToString());
+
+        public static string GetLobbyId(this SpreadMessage msg)
+            => msg.GetSpreadDto().LobbyId;
 
         public static string GetOriginalSender(this SpreadMessage msg)
-            => JsonSerializer.Deserialize<LobbyDto>(msg.Data.DecodeToString()).OriginalSender;
+            => msg.GetSpreadDto().OriginalSender;
+
+        public static Player GetPlayer(this SpreadMessage msg)
+            => msg.GetSpreadDto().Player;
+
+        public static string GetLobbyId(this string jsonString)
+            => JsonSerializer.Deserialize<SpreadDto>(jsonString).LobbyId;
+
+        public static OperationType? GetOperationType(this SpreadMessage msg)
+        {
+            try
+            {
+                return JsonSerializer.Deserialize<SpreadDto>(msg.Data.DecodeToString()).Type;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
     }
 }

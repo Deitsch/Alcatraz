@@ -1,110 +1,140 @@
 using Grpc.Core;
-using Microsoft.Extensions.Logging;
-using RegistrationServer.Listener;
 using RegistrationServer.Lobby.Proto;
 using RegistrationServer.Repositories;
 using RegistrationServer.Spread;
+using RegistrationServer.Spread.Enums;
 using RegistrationServer.Spread.Interface;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace RegistrationServer
 {
     public class LobbyService : Lobby.Proto.Lobby.LobbyBase
     {
-        private readonly ILogger<LobbyService> logger;
         private readonly ISpreadService spreadService;
-        private readonly MessageListener listener;
         private readonly LobbyRepository lobbyRepository;
         private readonly CreateLobbyOperation createLobbyOperation;
+        private readonly GetLobbiesOperation getLobbiesOperation;
+        private readonly JoinLobbyOperation joinLobbyOperation;
+        private readonly LeaveLobbyOperation leaveLobbyOperation;
+        private readonly RequestGameStartOperation requestGameStartOperation;
 
-        public LobbyService(ILogger<LobbyService> logger, ISpreadService spreadService, MessageListener listener, LobbyRepository lobbyRepository, CreateLobbyOperation createLobbyOperation)
+        public LobbyService(
+            ISpreadService spreadService,
+            LobbyRepository lobbyRepository,
+            CreateLobbyOperation createLobbyOperation,
+            GetLobbiesOperation getLobbiesOperation,
+            JoinLobbyOperation joinLobbyOperation,
+            LeaveLobbyOperation leaveLobbyOperation,
+            RequestGameStartOperation requestGameStartOperation)
         {
-            this.logger = logger;
             this.spreadService = spreadService;
-            this.listener = listener;
             this.lobbyRepository = lobbyRepository;
             this.createLobbyOperation = createLobbyOperation;
+            this.getLobbiesOperation = getLobbiesOperation;
+            this.joinLobbyOperation = joinLobbyOperation;
+            this.leaveLobbyOperation = leaveLobbyOperation;
+            this.requestGameStartOperation = requestGameStartOperation;
         }
 
         public override Task<GetLobbiesResponse> GetLobbies(GetLobbiesRequest request, ServerCallContext context)
         {
-            var response = new GetLobbiesResponse();
-
-            response.Lobbies.AddRange(lobbyRepository.GetLobbies());
-            return Task.FromResult(response);
-        }
-
-        public override Task<JoinLobbyResponse> CreateLobby(CreateLobbyRequest request, ServerCallContext context)
-        {
-            var lobbyInfo = new LobbyInfo
-            {
-                Id = Guid.NewGuid().ToString()
-            };
-            lobbyInfo.Players.Add(request.Player);
+            var getLobbiesResponse = new GetLobbiesResponse();
+            List<LobbyInfo> lobbies;
 
             try
             {
-                createLobbyOperation.Execute(lobbyInfo);
-
-                JoinLobbyResponse joinLobbyResponse = new JoinLobbyResponse
-                {
-                    Lobby = lobbyInfo
-                };
-                return Task.FromResult(joinLobbyResponse);
+                lobbies = getLobbiesOperation.Execute();
             }
             catch (Exception e)
             {
                 throw e;
             }
+
+            getLobbiesResponse.Lobbies.AddRange(lobbies);
+            return Task.FromResult(getLobbiesResponse);
+        }
+
+        public override Task<JoinLobbyResponse> CreateLobby(CreateLobbyRequest request, ServerCallContext context)
+        {
+            LobbyInfo lobby;
+            string lobbyId = Guid.NewGuid().ToString();
+
+            var spreadDto = new SpreadDto
+            {
+                Type = OperationType.CreateLobby,
+                OriginalSender = spreadService.UserName,
+                LobbyId = lobbyId,
+                Player = request.Player
+            };
+
+            try
+            {
+                createLobbyOperation.Execute(spreadDto, OperationType.CreateLobby);
+                lobby = lobbyRepository.FindById(lobbyId);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+
+            var joinLobbyResponse = new JoinLobbyResponse
+            {
+                Lobby = lobby
+            };
+            return Task.FromResult(joinLobbyResponse);
         }
 
         public override Task<JoinLobbyResponse> JoinLobby(JoinLobbyRequest request, ServerCallContext context)
         {
-            var response = new JoinLobbyResponse();
-            //var lobbyToJoin = lobbies.Single(l => l.Id == request.LobbyId);
-            //if (lobbyToJoin == null)
-            //{
-            //    throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
-            //}
+            LobbyInfo lobby;
 
-            //if (lobbyToJoin.Players.Any(p => p.Name == request.Player.Name))
-            //{
-            //    throw new RpcException(new Status(StatusCode.AlreadyExists,
-            //        $"A player with that name is already in lobby {lobbyToJoin.Id}"));
-            //}
+            var spreadDto = new SpreadDto
+            {
+                Type = OperationType.JoinLobby,
+                OriginalSender = spreadService.UserName,
+                LobbyId = request.LobbyId,
+                Player = request.Player
+            };
 
-            //if (lobbyToJoin.Players.Count == 4)
-            //{
-            //    throw new RpcException(new Status(StatusCode.FailedPrecondition,
-            //        $"Lobby with id {lobbyToJoin.Id} is already full"));
-            //}
-            //lobbyToJoin.Players.Add(request.Player);
-            //spreadConn.SendMessage($"New Player: {request.Player.Name}");
-            //response.Lobby = lobbyToJoin;
-            return Task.FromResult(response);
+            try
+            {
+                joinLobbyOperation.Execute(spreadDto, OperationType.JoinLobby);
+                lobby = lobbyRepository.FindById(request.LobbyId);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+
+            var joinLobbyResponse = new JoinLobbyResponse
+            {
+                Lobby = lobby
+            };
+            return Task.FromResult(joinLobbyResponse);
         }
 
         public override Task<LeaveLobbyResponse> LeaveLobby(LeaveLobbyRequest request, ServerCallContext context)
         {
-            var response = new LeaveLobbyResponse();
-            //var lobbyToLeave = lobbies.SingleOrDefault(l => l.Id == request.LobbyId);
-            //if (lobbyToLeave == null)
-            //{
-            //    throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
-            //}
+            var spreadDto = new SpreadDto
+            {
+                Type = OperationType.LeaveLobby,
+                OriginalSender = spreadService.UserName,
+                LobbyId = request.LobbyId,
+                Player = request.Player
+            };
 
-            //if (!lobbyToLeave.Players.Remove(request.Player))
-            //{
-            //    throw new RpcException(new Status(StatusCode.NotFound,
-            //        $"Player {request.Player.Name} not found in Lobby {request.LobbyId}"));
-            //}
+            try
+            {
+                leaveLobbyOperation.Execute(spreadDto, OperationType.LeaveLobby);
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
 
-            //if (lobbyToLeave.Players.Count == 0)
-            //{
-            //    lobbies.Remove(lobbyToLeave);
-            //}
-            return Task.FromResult(response);
+            return Task.FromResult(new LeaveLobbyResponse());
         }
     }
 }

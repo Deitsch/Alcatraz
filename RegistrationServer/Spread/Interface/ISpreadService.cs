@@ -1,4 +1,6 @@
-﻿namespace RegistrationServer.Spread.Interface
+﻿using RegistrationServer.Spread.Enums;
+
+namespace RegistrationServer.Spread.Interface
 {
     public interface ISpreadService
     {
