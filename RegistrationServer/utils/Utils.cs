@@ -16,8 +16,11 @@ namespace RegistrationServer.utils
         public static byte[] EncodeToByteArray(this string s)
             => Encoding.ASCII.GetBytes(s);
 
+        private static SpreadDto GetSpreadDto(this string jsonString)
+            => JsonSerializer.Deserialize<SpreadDto>(jsonString);
+
         private static SpreadDto GetSpreadDto(this SpreadMessage msg)
-            => JsonSerializer.Deserialize<SpreadDto>(msg.Data.DecodeToString());
+            => msg.Data.DecodeToString().GetSpreadDto();
 
         public static string GetLobbyId(this SpreadMessage msg)
             => msg.GetSpreadDto().LobbyId;
@@ -29,7 +32,7 @@ namespace RegistrationServer.utils
             => msg.GetSpreadDto().Player;
 
         public static string GetLobbyId(this string jsonString)
-            => JsonSerializer.Deserialize<SpreadDto>(jsonString).LobbyId;
+            => jsonString.GetSpreadDto().LobbyId;
 
         public static OperationType? GetOperationType(this SpreadMessage msg)
         {
