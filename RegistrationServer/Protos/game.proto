@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+option csharp_namespace = "RegistrationServer.Game.Proto";
+
+service Game {
+	rpc InitGame (InitGameRequest) returns (InitGameResponse);
+	rpc SetCurrentPlayer (SetCurrentPlayerRequest) returns (SetCurrentPlayerResponse);
+}
+
+message InitGameRequest{
+	string id = 1;
+	GameInfo gameInfo = 2;
+}
+
+message InitGameResponse{
+}
+
+message SetCurrentPlayerRequest{
+	string id = 1;
+}
+
+message SetCurrentPlayerResponse{
+}
+
+message NetworkPlayer {
+	string ip = 1;
+	int32 port = 2;
+	string name = 3;
+}
+
+message GameInfo {
+	int32 index = 1;
+	repeated NetworkPlayer players = 2;
+}

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option csharp_namespace = "GrpcClient.Lobby.Proto";
+option csharp_namespace = "Client.Lobby.Proto";
 
 service Lobby {
 	rpc CreateLobby (CreateLobbyRequest) returns (JoinLobbyResponse);
@@ -49,13 +49,6 @@ message Player {
 	string ip = 1;
 	int32 port = 2;
 	string name = 3;
-	PlayerState playerState = 4;
-}
-
-enum PlayerState{
-	Unknown = 0;
-	InLobby = 1;
-	InGame = 2;
 }
 
 message LobbyInfo {

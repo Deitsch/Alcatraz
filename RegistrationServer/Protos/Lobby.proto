@@ -7,22 +7,23 @@ service Lobby {
   rpc GetLobbies (GetLobbiesRequest) returns (GetLobbiesResponse);
   rpc JoinLobby (JoinLobbyRequest) returns (JoinLobbyResponse);
   rpc LeaveLobby (LeaveLobbyRequest) returns (LeaveLobbyResponse);
+  rpc RequestGameStart (RequestGameStartRequest) returns (RequestGameStartResponse);
 }
 
 message GetLobbiesRequest {
 }
 
 message GetLobbiesResponse {
-  repeated LobbyInfo lobbies = 1;
+  repeated LobbyInfo Lobbies = 1;
 }
 
 message CreateLobbyRequest {
-  Player player = 1;
+    NetworkPlayer player = 1;
 }
 
 message JoinLobbyRequest {
   string lobbyId = 1;
-  Player player = 2;
+  NetworkPlayer player = 2;
 }
 
 message JoinLobbyResponse {
@@ -31,13 +32,20 @@ message JoinLobbyResponse {
 
 message LeaveLobbyRequest {
 	string lobbyId = 1;
-	Player player = 2;
+	NetworkPlayer player = 2;
 }
 
 message LeaveLobbyResponse {
 }
 
-message Player {
+message RequestGameStartRequest{
+	string lobbyId = 1;
+}
+
+message RequestGameStartResponse{
+}
+
+message NetworkPlayer {
   string ip = 1;
   int32 port = 2;
   string name = 3;
@@ -45,5 +53,5 @@ message Player {
 
 message LobbyInfo {
   string id = 1;
-  repeated Player players = 2;
+  repeated NetworkPlayer players = 2;
 }

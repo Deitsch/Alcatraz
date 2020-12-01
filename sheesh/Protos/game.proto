@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+option csharp_namespace = "Client.Game.Proto";
+
+service Game {
+	rpc InitGame (InitGameRequest) returns (InitGameResponse);
+	rpc StartGame (StartGameRequest) returns (StartGameResponse);
+	rpc MakeMove (MakeMoveRequest) returns (MakeMoveResponse);
+}
+
+message InitGameRequest{
+	GameInfo gameInfo = 1;
+}
+
+message InitGameResponse{
+}
+
+message StartGameRequest{
+}
+
+message StartGameResponse{
+}
+
+message MakeMoveRequest{
+	MoveInfo moveInfo = 1;
+}
+
+message MakeMoveResponse{
+}
+
+message NetworkPlayer {
+	string ip = 1;
+	int32 port = 2;
+	string name = 3;
+}
+
+message GameInfo {
+	string id = 1;
+	repeated NetworkPlayer players = 2;
+}
+
+message Point{
+	int32 x = 1;
+	int32 y = 2;
+}
+
+message Prisoner{
+	Point oldPoint = 1;
+	Point newPoint = 2;
+}
+
+message MoveInfo {
+	string id = 1;
+	string playerName = 2;
+	Prisoner prisoner = 3;
+}

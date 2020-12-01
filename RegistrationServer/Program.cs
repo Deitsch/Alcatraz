@@ -37,7 +37,7 @@ namespace RegistrationServer
             //    Console.WriteLine(e);
             //    Environment.Exit(1);
             //}
-
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             CreateHostBuilder(args).Build().Run();
         }
 
