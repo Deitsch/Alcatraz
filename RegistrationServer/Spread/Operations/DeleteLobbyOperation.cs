@@ -20,14 +20,7 @@ namespace RegistrationServer.Spread
 
         protected override void SpecificOperation(SpreadMessage message)
         {
-            try
-            {
-                lobbyRepository.Delete(message.GetLobbyId());
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
+            lobbyRepository.Delete(message.GetLobbyId());
         }
     }
 }

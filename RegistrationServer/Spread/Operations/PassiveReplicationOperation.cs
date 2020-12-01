@@ -40,15 +40,7 @@ namespace RegistrationServer.Spread
             string jsonString = JsonSerializer.Serialize(spreadDto);
             spreadService.SendMulticast(MulticastType.ToPrimary, jsonString);
 
-            try
-            {
-                GetOkFromPrimary(spreadDto);
-                return;
-            }
-            catch (SpreadException e)
-            {
-                throw e;
-            }
+            GetOkFromPrimary(spreadDto);
         }
 
         private void HandleMessage(SpreadMessage message)

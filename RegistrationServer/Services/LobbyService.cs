@@ -46,14 +46,7 @@ namespace RegistrationServer.Services
             var getLobbiesResponse = new GetLobbiesResponse();
             List<LobbyInfo> lobbies;
 
-            try
-            {
-                lobbies = getLobbiesOperation.Execute();
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
+            lobbies = getLobbiesOperation.Execute();
 
             getLobbiesResponse.Lobbies.AddRange(lobbies);
             return Task.FromResult(getLobbiesResponse);
@@ -72,15 +65,9 @@ namespace RegistrationServer.Services
                 Player = request.Player
             };
 
-            try
-            {
-                createLobbyOperation.Execute(spreadDto, OperationType.CreateLobby);
-                lobby = lobbyRepository.FindById(lobbyId);
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
+            createLobbyOperation.Execute(spreadDto, OperationType.CreateLobby);
+
+            lobby = lobbyRepository.FindById(lobbyId);
 
             var joinLobbyResponse = new JoinLobbyResponse
             {
@@ -101,15 +88,9 @@ namespace RegistrationServer.Services
                 Player = request.Player
             };
 
-            try
-            {
-                joinLobbyOperation.Execute(spreadDto, OperationType.JoinLobby);
-                lobby = lobbyRepository.FindById(request.LobbyId);
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
+            joinLobbyOperation.Execute(spreadDto, OperationType.JoinLobby);
+
+            lobby = lobbyRepository.FindById(request.LobbyId);
 
             var joinLobbyResponse = new JoinLobbyResponse
             {
@@ -128,14 +109,7 @@ namespace RegistrationServer.Services
                 Player = request.Player
             };
 
-            try
-            {
-                leaveLobbyOperation.Execute(spreadDto, OperationType.LeaveLobby);
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
+            leaveLobbyOperation.Execute(spreadDto, OperationType.LeaveLobby);
 
             return Task.FromResult(new LeaveLobbyResponse());
         }
@@ -163,14 +137,7 @@ namespace RegistrationServer.Services
                 LobbyId = lobbyId
             };
 
-            try
-            {
-                deleteLobbyOperation.Execute(spreadDto, OperationType.DeleteLobby);
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
+            deleteLobbyOperation.Execute(spreadDto, OperationType.DeleteLobby);
 
             return Task.FromResult(new RequestGameStartResponse());
         }
