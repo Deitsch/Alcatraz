@@ -53,7 +53,7 @@ namespace RegistrationServer.Services
         {
             Console.WriteLine("Join Lobby request");
             var response = new JoinLobbyResponse();
-            var lobbyToJoin = _lobbies.Single(l => l.Id == request.LobbyId);
+            var lobbyToJoin = _lobbies.FirstOrDefault(l => l.Id == request.LobbyId);
             if (lobbyToJoin == null)
             {
                 throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
@@ -85,8 +85,9 @@ namespace RegistrationServer.Services
             {
                 throw new RpcException(new Status(StatusCode.NotFound, $"Lobby with id {request.LobbyId} not found"));
             }
-
-            if (!lobbyToLeave.Players.Remove(request.Player))
+            
+            var playerToRemove = lobbyToLeave.Players.FirstOrDefault(x => x.Name == request.Player.Name);
+            if (!lobbyToLeave.Players.Remove(playerToRemove))
             {
                 throw new RpcException(new Status(StatusCode.NotFound,
                     $"Player {request.Player.Name} not found in Lobby {request.LobbyId}"));

@@ -5,7 +5,7 @@ using GrpcClient.Lobby.Proto;
 
 namespace GrpcClient
 {
-    public class LobbyHandler
+    public class UserInputHandler
     {
         private static string helpText =
             $"Use following commands to interact with server:{Environment.NewLine}" +
@@ -19,9 +19,10 @@ namespace GrpcClient
         private static Lobby.Proto.Lobby.LobbyClient lobbyClient;
         private static Player _player;
         private static string _currentLobbyId;
-        private static bool PlayerIsInLobby => _currentLobbyId != null;
+        private static bool PlayerIsInLobby => _player.PlayerState == PlayerState.InLobby;
+        private static bool PlayerIsInGame => _player.PlayerState == PlayerState.InGame;
 
-        public LobbyHandler(ChannelBase channel, Player player)
+        public UserInputHandler(ChannelBase channel, Player player)
         {
             _player = player;
             lobbyClient = new Lobby.Proto.Lobby.LobbyClient(channel);
@@ -47,9 +48,7 @@ namespace GrpcClient
                         CreateLobby(_player);
                         break;
                     case "join":
-                        Console.Write("LobbyId: ");
-                        var lobbyId = Console.ReadLine();
-                        JoinLobby(lobbyId, _player);
+                        JoinLobby(_player);
                         break;
                     case "leave":
                         LeaveLobby(_currentLobbyId, _player);
@@ -72,7 +71,14 @@ namespace GrpcClient
 
         private void DoMove()
         {
-            ;
+            if (PlayerIsInGame)
+            {
+                
+            }
+            else
+            {
+                Console.WriteLine("You are not in a game!");
+            }
         }
 
         private static void StartGame(string lobbyId)
@@ -90,6 +96,8 @@ namespace GrpcClient
                 {
                     var reply = lobbyClient.LeaveLobby(new LeaveLobbyRequest { LobbyId = lobbyId, Player = player });
                     _currentLobbyId = null;
+                    _player.PlayerState = PlayerState.Unknown;
+
                     Console.WriteLine("You left lobby");
                 }
                 else
@@ -128,6 +136,8 @@ namespace GrpcClient
                     _currentLobbyId = reply.Lobby.Id;
                     Console.WriteLine(
                         $"You created and joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ", reply.Lobby.Players.Select(x => x.Name))}");
+                    _player.PlayerState = PlayerState.InLobby;
+
                 }
                 else
                 {
@@ -145,16 +155,20 @@ namespace GrpcClient
             }
         }
 
-        private void JoinLobby(string lobbyId, Player player)
+        private void JoinLobby(Player player)
         {
+            
             try
             {
                 if (!PlayerIsInLobby)
                 {
+                    Console.Write("LobbyId: ");
+                    var lobbyId = Console.ReadLine();
                     var reply = lobbyClient.JoinLobby(new JoinLobbyRequest { LobbyId = lobbyId, Player = player });
                     _currentLobbyId = reply.Lobby.Id;
                     Console.WriteLine(
                         $"You joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ", reply.Lobby.Players.Select(x => x.Name))}");
+                    _player.PlayerState = PlayerState.InLobby;
                 }
                 else
                 {

@@ -49,6 +49,13 @@ message Player {
 	string ip = 1;
 	int32 port = 2;
 	string name = 3;
+	PlayerState playerState = 4;
+}
+
+enum PlayerState{
+	Unknown = 0;
+	InLobby = 1;
+	InGame = 2;
 }
 
 message LobbyInfo {

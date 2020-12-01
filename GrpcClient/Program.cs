@@ -11,7 +11,7 @@ namespace GrpcClient
     public class Program
     {
 
-        private static LobbyHandler _lobbyHandler;
+        private static UserInputHandler _userInputHandler;
         private static Game.Proto.Game.GameClient gameClient;
 
 
@@ -37,11 +37,12 @@ namespace GrpcClient
             {
                 Ip = "127.0.0.1",
                 Port = Convert.ToInt32(port),
-                Name = playerName
+                Name = playerName,
+                PlayerState = PlayerState.Unknown,
             };
             
-            _lobbyHandler = new LobbyHandler(channel, player);
-            _lobbyHandler.HandleUserInput();
+            _userInputHandler = new UserInputHandler(channel, player);
+            _userInputHandler.HandleUserInput();
 
             await webHost.WaitForShutdownAsync();
         }
