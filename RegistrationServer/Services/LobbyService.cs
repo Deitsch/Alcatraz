@@ -117,7 +117,7 @@ namespace RegistrationServer.Services
                 throw new RpcException(new Status(StatusCode.NotFound,
                     $"Lobby with id {request.LobbyId} not found"));
             }
-            if (!lobbyToLeave.Players.Contains(request.Player))
+            if (!PlayerInLobby(lobbyToLeave, request.Player))
             {
                 throw new RpcException(new Status(StatusCode.NotFound,
                     $"Player {request.Player.Name} not found in Lobby {request.LobbyId}"));
@@ -134,6 +134,11 @@ namespace RegistrationServer.Services
             leaveLobbyOperation.Execute(spreadDto, OperationType.LeaveLobby);
 
             return Task.FromResult(new LeaveLobbyResponse());
+        }
+
+        private bool PlayerInLobby(LobbyInfo lobbyToLeave, NetworkPlayer player)
+        {
+            return lobbyToLeave.Players.Any(p => p.Name == player.Name);
         }
 
         public override Task<RequestGameStartResponse> RequestGameStart(RequestGameStartRequest request, ServerCallContext context)
