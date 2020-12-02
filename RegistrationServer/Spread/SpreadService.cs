@@ -1,10 +1,13 @@
 ﻿using RegistrationServer.Listener;
+using RegistrationServer.Lobby.Proto;
+using RegistrationServer.Repositories;
 using RegistrationServer.Spread.Interface;
 using RegistrationServer.utils;
 using spread;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace RegistrationServer.Spread
 {
@@ -33,11 +36,13 @@ namespace RegistrationServer.Spread
 
         private readonly ISpreadConnectionWrapper connection;
         private readonly MessageListener messageListener;
+        private readonly LobbyRepository lobbyRepository;
 
-        public SpreadService(ISpreadConnectionWrapper connection, MessageListener messageListener)
+        public SpreadService(ISpreadConnectionWrapper connection, MessageListener messageListener, LobbyRepository lobbyRepository)
 		{ 
             this.connection = connection;
             this.messageListener = messageListener;
+            this.lobbyRepository = lobbyRepository;
         }
 
         public void Run()
@@ -61,7 +66,10 @@ namespace RegistrationServer.Spread
 				if (info.IsCausedByJoin)
 				{
 					if (IsPrimary)
+                    {
 						SendMulticast(MulticastType.NewPrimary, UserName);
+						SendMulticast(MulticastType.UpdateDb, GetSerializedLobbies());
+					}
 
 					if (info.Members.Length == 1)
 						primaryName = UserName;
@@ -81,11 +89,26 @@ namespace RegistrationServer.Spread
 						primaryName = message.Data.DecodeToString();
 						Console.WriteLine("New Primary was set: " + primaryName);
 						break;
+
+					case MulticastType.UpdateDb:
+						if(!IsPrimary)
+                        {
+							var jsonString = message.Data.DecodeToString();
+							List<LobbyInfo> lobbies = JsonSerializer.Deserialize<List<LobbyInfo>>(jsonString);
+							lobbyRepository.UpdateAll(lobbies);
+						}
+						break;
 				}
 			}
 		}
 
-		private void UpdateList(SpreadGroup[] actualMembers)
+        private string GetSerializedLobbies()
+        {
+			var lobbies = lobbyRepository.FindAll();
+			return JsonSerializer.Serialize(lobbies);
+		}
+
+        private void UpdateList(SpreadGroup[] actualMembers)
 		{
 			groupMembers.Clear();
 			groupMembers.AddRange(actualMembers.Select(m => m.ToString().Trim('#').Substring(0, 8)));
