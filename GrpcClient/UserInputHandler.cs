@@ -166,9 +166,15 @@ namespace GrpcClient
 
         private static void StartGame(string lobbyId)
         {
-            lobbyClient.RequestGameStart(new RequestGameStartRequest { LobbyId = lobbyId });
-            Console.WriteLine($"Game of Lobby {lobbyId} started!");
-            //todo delete/flag lobby
+            try
+            {
+                lobbyClient.RequestGameStart(new RequestGameStartRequest { LobbyId = lobbyId });
+                Console.WriteLine($"Game of Lobby {lobbyId} started!");
+            }
+            catch (RpcException rpcException)
+            {
+                Console.WriteLine($"ERROR: {rpcException.StatusCode} {rpcException.Message}");
+            }
         }
 
         private void LeaveLobby(string lobbyId, Player player)
