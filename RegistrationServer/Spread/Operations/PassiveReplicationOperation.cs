@@ -1,4 +1,5 @@
-﻿using RegistrationServer.Listener;
+﻿using Grpc.Core;
+using RegistrationServer.Listener;
 using RegistrationServer.Spread.Enums;
 using RegistrationServer.Spread.Interface;
 using RegistrationServer.utils;
@@ -169,7 +170,8 @@ namespace RegistrationServer.Spread
                 return;
             }
 
-            throw new SpreadException("Not all servers acknowledged request");
+            throw new RpcException(new Status(StatusCode.Cancelled,
+                    "Not all servers acknowledged request"));
         }
     }
 }

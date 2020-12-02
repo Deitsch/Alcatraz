@@ -35,7 +35,7 @@ namespace RegistrationServer.utils
         {
             try
             {
-                return JsonSerializer.Deserialize<SpreadDto>(msg.Data.DecodeToString()).Type;
+                return msg.Data.DecodeToString().ToSpreadDto().Type;
             }
             catch (Exception)
             {
