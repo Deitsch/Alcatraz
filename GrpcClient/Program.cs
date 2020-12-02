@@ -20,6 +20,10 @@ namespace GrpcClient
             //var alcatraz = new Alcatraz.Alcatraz();
             //alcatraz.showWindow();
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+            Console.Write("Enter SERVER ip: ");
+            var serverIp = Console.ReadLine();
+            Console.Write("Enter SERVER port: ");
+            var serverPort = Console.ReadLine();
             Console.Write("Enter your ip: ");
             var ip = Console.ReadLine();
             Console.Write("Enter your port: ");
@@ -30,7 +34,7 @@ namespace GrpcClient
 
             
             // The port number(5001) must match the port of the gRPC server.
-            using var channel = GrpcChannel.ForAddress("http://localhost:5001");
+            using var channel = GrpcChannel.ForAddress($"http://{serverIp}:{serverPort}");
             gameClient = new Game.Proto.Game.GameClient(channel);
             Console.WriteLine($"args: {string.Join(",",args)}");
 
