@@ -35,7 +35,7 @@ namespace RegistrationServer.utils
         {
             try
             {
-                return msg.Data.DecodeToString().ToSpreadDto().Type;
+                return msg.ToSpreadDto().Type;
             }
             catch (Exception)
             {
