@@ -62,7 +62,7 @@ namespace RegistrationServer.Services
                 Player = request.Player
             };
 
-            createLobbyOperation.Execute(spreadDto, OperationType.CreateLobby);
+            createLobbyOperation.Execute(spreadDto);
 
             var joinLobbyResponse = new JoinLobbyResponse
             {
@@ -99,7 +99,7 @@ namespace RegistrationServer.Services
                 Player = request.Player
             };
 
-            joinLobbyOperation.Execute(spreadDto, OperationType.JoinLobby);
+            joinLobbyOperation.Execute(spreadDto);
 
             var joinLobbyResponse = new JoinLobbyResponse
             {
@@ -131,7 +131,7 @@ namespace RegistrationServer.Services
                 Player = request.Player
             };
 
-            leaveLobbyOperation.Execute(spreadDto, OperationType.LeaveLobby);
+            leaveLobbyOperation.Execute(spreadDto);
 
             return Task.FromResult(new LeaveLobbyResponse());
         }
@@ -163,7 +163,7 @@ namespace RegistrationServer.Services
                 LobbyId = request.LobbyId
             };
 
-            deleteLobbyOperation.Execute(spreadDto, OperationType.DeleteLobby);
+            deleteLobbyOperation.Execute(spreadDto);
 
             return Task.FromResult(new RequestGameStartResponse());
         }

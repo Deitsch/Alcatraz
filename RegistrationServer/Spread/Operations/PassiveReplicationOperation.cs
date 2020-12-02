@@ -35,7 +35,7 @@ namespace RegistrationServer.Spread
             listener.Receive += (sender, e) => HandleMessage(e.Message);
         }
 
-        public void Execute(SpreadDto spreadDto, OperationType operationType)
+        public void Execute(SpreadDto spreadDto)
         {
             Console.WriteLine("Send to Primary");
             string jsonString = JsonSerializer.Serialize(spreadDto);
