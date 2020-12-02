@@ -1,5 +1,4 @@
 ﻿using RegistrationServer.Listener;
-using RegistrationServer.Lobby.Proto;
 using RegistrationServer.Repositories;
 using RegistrationServer.Spread.Interface;
 using RegistrationServer.utils;
@@ -55,7 +54,7 @@ namespace RegistrationServer.Spread
             }
         }
 
-		private void HandleMessage(SpreadMessage message)
+        private void HandleMessage(SpreadMessage message)
 		{
 			if (message.IsMembership)
 			{
@@ -94,7 +93,8 @@ namespace RegistrationServer.Spread
 						if(!IsPrimary)
                         {
 							var jsonString = message.Data.DecodeToString();
-							List<LobbyInfo> lobbies = JsonSerializer.Deserialize<List<LobbyInfo>>(jsonString);
+							var lobbieDtos = JsonSerializer.Deserialize<List<LobbyInfoDto>>(jsonString);
+							var lobbies = lobbieDtos.Select(lobby => lobby.ToLobbyInfo()).ToList();
 							lobbyRepository.UpdateAll(lobbies);
 						}
 						break;
@@ -104,11 +104,11 @@ namespace RegistrationServer.Spread
 
         private string GetSerializedLobbies()
         {
-			var lobbies = lobbyRepository.FindAll();
+			var lobbies = lobbyRepository.FindAll().Select(lobby => lobby.ToDto()).ToList();
 			return JsonSerializer.Serialize(lobbies);
 		}
 
-        private void UpdateList(SpreadGroup[] actualMembers)
+		private void UpdateList(SpreadGroup[] actualMembers)
 		{
 			groupMembers.Clear();
 			groupMembers.AddRange(actualMembers.Select(m => m.ToString().Trim('#').Substring(0, 8)));
