@@ -1,0 +1,520 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net5.0-windows</TargetFramework>
+		<UseWindowsForms>true</UseWindowsForms>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<RootNamespace>Client</RootNamespace>
+		<AssemblyName>Client</AssemblyName>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Update="Properties\Resources.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+		<Compile Update="Properties\Resources.Designer.cs">
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Resources.resx</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="Properties\Settings.settings">
+			<Generator>SettingsSingleFileGenerator</Generator>
+			<LastGenOutput>Settings.Designer.cs</LastGenOutput>
+		</None>
+		<Compile Update="Properties\Settings.Designer.cs">
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Settings.settings</DependentUpon>
+			<DesignTimeSharedInput>True</DesignTimeSharedInput>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	<PackageReference Include="Grpc.Net.Client" Version="2.34.0-pre1" />
+	<PackageReference Include="Grpc.Tools" Version="2.34.0">
+	  <PrivateAssets>all</PrivateAssets>
+	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Antiforgery">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Authentication.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Authentication.Core">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Authorization">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Authorization.Policy">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Connections.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Cors">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Cryptography.Internal">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.DataProtection">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Diagnostics">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Diagnostics.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Grpc.HttpApi" Version="0.1.0-alpha.20580.2" />
+	<PackageReference Include="Microsoft.AspNetCore.HostFiltering">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Hosting">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Hosting.Server.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Html.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Http">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Http.Extensions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Http.Features">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.HttpOverrides">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.JsonPatch">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Localization">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Mvc">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.Analyzers">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.ApiExplorer">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.Core">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.Cors">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.DataAnnotations">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.Localization">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.Extensions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.RazorPages">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.TagHelpers">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Razor">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Razor.Design">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Razor.Language">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Razor.Runtime">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.ResponseCaching.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Routing">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Routing.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Server.IIS">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Server.IISIntegration">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Server.Kestrel">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Core">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Https">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.AspNetCore.WebUtilities">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
+		<Version>1.1.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.CodeAnalysis.Common">
+		<Version>2.8.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.CodeAnalysis.CSharp">
+		<Version>2.8.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.CodeAnalysis.Razor">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.CSharp">
+		<Version>4.5.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.DiaSymReader.Native">
+		<Version>1.7.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.DotNet.PlatformAbstractions">
+		<Version>2.1.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Caching.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Caching.Memory">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Configuration">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Configuration.Binder">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Configuration.CommandLine">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Configuration.Json">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.DependencyInjection">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.DependencyModel">
+		<Version>2.1.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.FileProviders.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.FileProviders.Composite">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.FileProviders.Physical">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.FileSystemGlobbing">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Localization">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Localization.Abstractions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Logging">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Logging.Abstractions">
+		<Version>3.0.3</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Logging.Configuration">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Logging.Console">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Logging.Debug">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Logging.EventSource">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.ObjectPool">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Options">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.Primitives">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Extensions.WebEncoders">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Net.Http.Headers">
+		<Version>2.2.0</Version>
+	</PackageReference>
+	<PackageReference Include="Microsoft.Win32.Registry">
+		<Version>4.5.0</Version>
+	</PackageReference>
+	<PackageReference Include="Newtonsoft.Json">
+		<Version>11.0.2</Version>
+	</PackageReference>
+	<PackageReference Include="Newtonsoft.Json.Bson">
+		<Version>1.0.1</Version>
+	</PackageReference>
+	<PackageReference Include="System.AppContext">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Buffers">
+		<Version>4.5.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Collections">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Collections.Concurrent">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Collections.Immutable">
+		<Version>1.5.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.ComponentModel.Annotations">
+		<Version>4.5.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Console">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Diagnostics.Debug">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Diagnostics.DiagnosticSource">
+		<Version>4.5.1</Version>
+	</PackageReference>
+	<PackageReference Include="System.Diagnostics.FileVersionInfo">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Diagnostics.StackTrace">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Diagnostics.Tools">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Dynamic.Runtime">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Globalization">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.IO">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.IO.Compression">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.IO.FileSystem">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.IO.FileSystem.Primitives">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.IO.Pipelines">
+		<Version>4.7.2</Version>
+	</PackageReference>
+	<PackageReference Include="System.Linq">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Linq.Expressions">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Memory">
+		<Version>4.5.3</Version>
+	</PackageReference>
+	<PackageReference Include="System.Numerics.Vectors">
+		<Version>4.5.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Reflection">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Reflection.Metadata">
+		<Version>1.6.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Resources.ResourceManager">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Runtime">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Runtime.CompilerServices.Unsafe">
+		<Version>4.5.2</Version>
+	</PackageReference>
+	<PackageReference Include="System.Runtime.Extensions">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Runtime.InteropServices">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Runtime.InteropServices.RuntimeInformation">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Runtime.Numerics">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Security.AccessControl">
+		<Version>4.5.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Security.Cryptography.Algorithms">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Security.Cryptography.Cng">
+		<Version>4.5.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Security.Cryptography.Encoding">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Security.Cryptography.Primitives">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Security.Cryptography.X509Certificates">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Security.Cryptography.Xml">
+		<Version>4.5.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Security.Permissions">
+		<Version>4.5.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Security.Principal.Windows">
+		<Version>4.5.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Text.Encoding">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Text.Encoding.CodePages">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Text.Encoding.Extensions">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Text.Encodings.Web">
+		<Version>4.5.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Threading">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Threading.Tasks">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Threading.Tasks.Extensions">
+		<Version>4.5.1</Version>
+	</PackageReference>
+	<PackageReference Include="System.Threading.Tasks.Parallel">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Threading.Thread">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.ValueTuple">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Xml.ReaderWriter">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Xml.XDocument">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Xml.XmlDocument">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Xml.XPath">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	<PackageReference Include="System.Xml.XPath.XDocument">
+		<Version>4.3.0</Version>
+	</PackageReference>
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <Reference Include="AlcatrazLib">
+	    <HintPath>..\AlcatrazGame\AlcatrazLib.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Protobuf Include="Protos\game.proto" GrpcServices="Both" />
+		<Protobuf Include="Protos\lobby.proto" GrpcServices="Both" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Protos\game.proto">
+	    <GrpcServices>Both</GrpcServices>
+	  </None>
+	  <None Update="Protos\Lobby.proto">
+	    <GrpcServices>Both</GrpcServices>
+	  </None>
+	</ItemGroup>
+</Project>

@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcClient", "GrpcClient\Gr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RegistrationServer", "RegistrationServer\RegistrationServer.csproj", "{F5D9C200-3382-42D6-83A5-342FBB7558F3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "sheesh\Client.csproj", "{3E113286-5F7E-4FFF-9FC6-F462D5E9F0D3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{D67C0E82-4B46-4C55-9607-04BB4EE1B925}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{F5D9C200-3382-42D6-83A5-342FBB7558F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F5D9C200-3382-42D6-83A5-342FBB7558F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F5D9C200-3382-42D6-83A5-342FBB7558F3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3E113286-5F7E-4FFF-9FC6-F462D5E9F0D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3E113286-5F7E-4FFF-9FC6-F462D5E9F0D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3E113286-5F7E-4FFF-9FC6-F462D5E9F0D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3E113286-5F7E-4FFF-9FC6-F462D5E9F0D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D67C0E82-4B46-4C55-9607-04BB4EE1B925}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D67C0E82-4B46-4C55-9607-04BB4EE1B925}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D67C0E82-4B46-4C55-9607-04BB4EE1B925}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D67C0E82-4B46-4C55-9607-04BB4EE1B925}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
