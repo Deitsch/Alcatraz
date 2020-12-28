@@ -53,7 +53,7 @@ namespace RegistrationServer.Services
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("Some Player did not respond -> retry in 1000 ms");
+                        Console.WriteLine($"Player {player.Ip}:{player.Port} did not respond -> retry in 1000 ms");
                         allGood = false;
                         Thread.Sleep(1000);
                         break;

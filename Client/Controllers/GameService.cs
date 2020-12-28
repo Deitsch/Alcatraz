@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Windows.Forms;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Client.Game.Proto;
 
-namespace Client.Services
+namespace Client.Controllers
 {
     public class GameService : Client.Game.Proto.Game.GameBase
     {
@@ -23,10 +24,11 @@ namespace Client.Services
         private string initGameToken;
         private string setCurrentPlayerToken;
 
+        public static Form MainForm { get; private set; }
+
         public GameService(ILogger<GameService> logger)
         {
             _logger = logger;
-            //_alcatraz = new Alcatraz.Alcatraz();
         }
 
         public override Task<InitGameResponse> InitGame(InitGameRequest request, ServerCallContext context)
@@ -38,7 +40,13 @@ namespace Client.Services
                 Index = request.GameInfo.Index;
                 me = NetworkPlayers[Index];
                 PlayerState = PlayerState.InGame;
-                //_alcatraz.init(request.GameInfo.Players.Count, _index);
+
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Alcatraz.Alcatraz a = new Alcatraz.Alcatraz();
+                a.init(request.GameInfo.Players.Count, Index);
+                MainForm = a.getWindow();
+                Application.Run(MainForm);
             }
             else
             {

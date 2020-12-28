@@ -2,9 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using Client.Lobby.Proto;
 using Client.Services;
-using Grpc.Core;
 using Grpc.Net.Client;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
@@ -16,79 +14,60 @@ namespace Client
 {
     public class Program
     {
-        public static Form MainForm { get; private set; }
+        //public static Form MainForm { get; private set; }
 
-        private static Lobby.Proto.Lobby.LobbyClient lobbyClient;
-        private static Player _player;
-        private static string _currentLobbyId;
-        private static Random random;
-        private static bool PlayerIsInLobby => _player.PlayerState == PlayerState.InLobby;
-        private static bool PlayerIsInGame => GameService.PlayerState == Game.Proto.PlayerState.InGame;
+        private static UserInputHandler _userInputHandler;
 
         [STAThread]
         public static void Main(string[] args)
         {
-            CreateWebHostBuilder(args).Build().RunAsync();
+            Console.Write("Enter Player Name: ");
+            var playerName = Console.ReadLine();
 
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Alcatraz.Alcatraz a = new Alcatraz.Alcatraz();
-            MainForm = a.getWindow();
+            // we will use a static port but we need a virtual machine or smth
+            Console.Write("Port: ");
+            var port = Console.ReadLine();
+
+            CreateWebHostBuilder(args, port).Build().RunAsync();
+
+            //Application.EnableVisualStyles();
+            //Application.SetCompatibleTextRenderingDefault(false);
+            //Alcatraz.Alcatraz a = new Alcatraz.Alcatraz();
+            //a.init(2, 0);
+            //MainForm = a.getWindow();
             //Application.Run(MainForm);
+
             //a.showWindow();
 
-            using var channel = GrpcChannel.ForAddress($"http://127.0.0.1:5001");
-            var gameClient = new Game.Proto.Game.GameClient(channel);
+            //Thread t = new Thread(new ThreadStart(tws.ThreadProc));
+            //t.Start();
+            //Console.WriteLine("Main thread does some work, then waits.");
+            //t.Join();
+            //Console.WriteLine(
+            //    "Independent task has completed; main thread ends.");
 
-            var playerName = "Player1";
+
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+            using var channel = GrpcChannel.ForAddress($"http://127.0.0.1:5001");
+            //var gameClient = new Game.Proto.Game.GameClient(channel);
+
             var player = new Player
             {
                 Ip = "127.0.0.1",
-                Port = Convert.ToInt32(80),
+                //Ip = ip,
+                Port = Convert.ToInt32(port),
                 Name = playerName,
                 PlayerState = PlayerState.Unknown,
             };
 
-            random = new Random();
-            lobbyClient = new Lobby.Proto.Lobby.LobbyClient(channel);
-
-
-
-            CreateLobby(player);
-
+            _userInputHandler = new UserInputHandler(channel, player);
+            _userInputHandler.HandleUserInput();
         }
 
-        private static void CreateLobby(Player player)
-        {
-            try
-            {
-                if (true && true)
-                {
-                    var reply = lobbyClient.CreateLobby(new CreateLobbyRequest { Player = player });
-                    _currentLobbyId = reply.Lobby.Id;
-                    Console.WriteLine(
-                        $"You created and joined Lobby {reply.Lobby.Id}, Current Players: {string.Join(", ", reply.Lobby.Players.Select(x => x.Name))}");
-                    //_player.PlayerState = PlayerState.InLobby;
-
-                }
-                else
-                {
-                    Console.WriteLine("You are already in a lobby");
-                }
-            }
-            catch (RpcException rpcException)
-            {
-                Console.WriteLine($"ERROR: {rpcException.StatusCode} {rpcException.Message}");
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                throw;
-            }
-        }
-
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args, string port = "5002") =>
             WebHost.CreateDefaultBuilder(args)
+                .UseUrls($"http://localhost:{port}")
                 .UseStartup<Startup>();
+
     }
 }

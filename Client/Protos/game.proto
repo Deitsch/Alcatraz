@@ -2,10 +2,18 @@ syntax = "proto3";
 
 option csharp_namespace = "Client.Game.Proto";
 
+
 service Game {
 	rpc InitGame (InitGameRequest) returns (InitGameResponse);
 	rpc SetCurrentPlayer (SetCurrentPlayerRequest) returns (SetCurrentPlayerResponse);
 	rpc MakeMove (MakeMoveRequest) returns (MakeMoveResponse);
+}
+
+message GetRequest{
+}
+
+message GetReply{
+	string id = 1;
 }
 
 message InitGameRequest{
