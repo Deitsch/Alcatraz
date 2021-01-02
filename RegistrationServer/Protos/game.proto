@@ -28,7 +28,13 @@ message NetworkPlayer {
 	string name = 3;
 }
 
+enum PlayerState{
+	Unknown = 0;
+	InLobby = 1;
+	InGame = 2;
+}
+
 message GameInfo {
-	int32 index = 1;
+	int32 playerIndex = 1;
 	repeated NetworkPlayer players = 2;
 }
