@@ -14,7 +14,8 @@ namespace Client
 {
     public class Program
     {
-        //public static Form MainForm { get; private set; }
+        public static Form MainForm { get; private set; }
+        public static MoveListener move { get; private set; }
 
         private static UserInputHandler _userInputHandler;
 
@@ -29,23 +30,6 @@ namespace Client
             var port = Console.ReadLine();
 
             CreateWebHostBuilder(args, port).Build().RunAsync();
-
-            //Application.EnableVisualStyles();
-            //Application.SetCompatibleTextRenderingDefault(false);
-            //Alcatraz.Alcatraz a = new Alcatraz.Alcatraz();
-            //a.init(2, 0);
-            //MainForm = a.getWindow();
-            //Application.Run(MainForm);
-
-            //a.showWindow();
-
-            //Thread t = new Thread(new ThreadStart(tws.ThreadProc));
-            //t.Start();
-            //Console.WriteLine("Main thread does some work, then waits.");
-            //t.Join();
-            //Console.WriteLine(
-            //    "Independent task has completed; main thread ends.");
-
 
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             using var channel = GrpcChannel.ForAddress($"http://127.0.0.1:5001");

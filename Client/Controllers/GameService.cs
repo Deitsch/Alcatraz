@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Client.Game.Proto;
+using Client.Services;
+using Grpc.Net.Client;
 
 namespace Client.Controllers
 {
@@ -15,16 +17,13 @@ namespace Client.Controllers
 
         private readonly ILogger<GameService> _logger;
         public static List<NetworkPlayer> NetworkPlayers;
-        private readonly Alcatraz.Alcatraz _alcatraz;
         public static int Index;
-        private NetworkPlayer me;
         public static PlayerState PlayerState = PlayerState.Unknown;
-        public static bool ItsMyTurn;
         private string lastMoveToken;
         private string initGameToken;
-        private string setCurrentPlayerToken;
 
-        public static Form MainForm { get; private set; }
+        public static MoveListener moveListener { get; private set; }
+        public static Alcatraz.Alcatraz game;
 
         public GameService(ILogger<GameService> logger)
         {
@@ -35,57 +34,152 @@ namespace Client.Controllers
         {
             if (initGameToken != request.Id)
             {
-                Console.WriteLine("Init Game, wait for your move");
+                
                 NetworkPlayers = request.GameInfo.Players.ToList();
                 Index = request.GameInfo.Index;
-                me = NetworkPlayers[Index];
+                Console.WriteLine($" Welcome {request.GameInfo.Players[Index].Name} - index : {Index}");
                 PlayerState = PlayerState.InGame;
-
+            
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Alcatraz.Alcatraz a = new Alcatraz.Alcatraz();
-                a.init(request.GameInfo.Players.Count, Index);
-                MainForm = a.getWindow();
-                Application.Run(MainForm);
+                game = new Alcatraz.Alcatraz();
+                moveListener = new MoveListener(this);
+
+                game.init(request.GameInfo.Players.Count, Index);
+                
+                for (int i = 0; i < request.GameInfo.Players.Count; i++)
+                {
+                    game.getPlayer(i).Name = request.GameInfo.Players[i].Name;
+                }
+                
+                game.addMoveListener(moveListener);
+
+                Thread t = new Thread(new ThreadStart(startGame));
+                t.Name = "GUI Thread";
+                t.Start();
             }
             else
             {
-                Console.WriteLine("Received init more than once, so doing nothing");
+                Console.WriteLine("Received init more than once");
             }
            
             return Task.FromResult(new InitGameResponse());
         }
 
-        public override Task<SetCurrentPlayerResponse> SetCurrentPlayer(SetCurrentPlayerRequest request, ServerCallContext context)
-        {
-            if (initGameToken != request.Id)
-            {
-                Console.WriteLine($"It's your turn {me.Name}!");
-                ItsMyTurn = true;
-            }
-            else
-            {
-                Console.WriteLine("Received init more than once, so doing nothing");
-            }
-            return Task.FromResult(new SetCurrentPlayerResponse());
+        private void startGame() {
+            _logger.LogInformation(Thread.CurrentThread.Name + " started");
+            game.showWindow();
+            game.start();
+            Application.Run();
         }
 
-        public override Task<MakeMoveResponse> MakeMove(MakeMoveRequest request, ServerCallContext context)
+        //public override Task<SetCurrentPlayerResponse> SetCurrentPlayer(SetCurrentPlayerRequest request, ServerCallContext context)
+        //{
+        //    if (initGameToken != request.Id)
+        //    {
+        //        Console.WriteLine($"It's your turn {me.Name}!");
+
+        //    }
+        //    else
+        //    {
+        //        Console.WriteLine($"Received current player token {initGameToken} more than once -> skip");
+        //    }
+        //    return Task.FromResult(new SetCurrentPlayerResponse());
+        //}
+
+        public override Task<MakeMoveResponse> RemoteMove(MakeMoveRequest request, ServerCallContext context)
         {
+            MoveInformation moveInfo = request.MoveInfo;
             //check idempotency token
             if (lastMoveToken != request.MoveInfo.Id)
             {
                 //execute move
-                Console.WriteLine($"{request.MoveInfo.PlayerName} did this move x:{request.MoveInfo.Prisoner.NewPoint.X} y:{request.MoveInfo.Prisoner.NewPoint.Y}");
-                lastMoveToken = request.MoveInfo.Id;
+                Alcatraz.Player player = game.getPlayer(moveInfo.Player);
+                Alcatraz.Prisoner prisoner = game.getPrisoner(moveInfo.Prisoner.Id);
+                Console.WriteLine("Player: " + player.Name + " id: " + player.Id + " is moving " + prisoner + " to " + (moveInfo.RowOrCol == Alcatraz.Alcatraz.ROW ? "row" : "col") + " " + (moveInfo.RowOrCol == Alcatraz.Alcatraz.ROW ? moveInfo.Row : moveInfo.Col));
+                game.doMove(player, prisoner, moveInfo.RowOrCol, moveInfo.Row, moveInfo.Col);
+                lastMoveToken = moveInfo.Id;
             }
             else
             {
                 //already done, other player has not received
-                Console.WriteLine("Received a move more than once, so doing nothing");
+                Console.WriteLine($"Received move {lastMoveToken} more than once -> skip");
             }
             
             return Task.FromResult(new MakeMoveResponse());
         }
+
+        public void DoMoveAndSetNextPlayer(Alcatraz.Player player, Alcatraz.Prisoner prisoner, int rowOrCol, int row, int col)
+        {
+
+            var makeMove = new MakeMoveRequest
+            {
+                MoveInfo = new MoveInformation
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Player = Index,
+                    Prisoner = new AlcatrazFigure { Id = prisoner.Id },
+                    RowOrCol = rowOrCol,
+                    Row = row,
+                    Col = col
+                }
+            };
+            MakeReliableMove(makeMove);
+            Console.WriteLine("Move sent to other Players!");
+
+            //var nextPlayer = GameService.NetworkPlayers[(GameService.Index + 1) % GameService.NetworkPlayers.Count];
+            //SetNextPlayerReliable(nextPlayer);
+        }
+
+        private static void MakeReliableMove(MakeMoveRequest makeMove)
+        {
+            var allGood = false;
+            while (!allGood)
+            {
+                allGood = true;
+                for (var index = 0; index < GameService.NetworkPlayers.Count; index++)
+                {
+                    if(index != Index)
+                    {
+                        var player = GameService.NetworkPlayers[index];
+                        try
+                        {
+                            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                            using var channel = GrpcChannel.ForAddress($"http://{player.Ip}:{player.Port}");
+                            var gameClient = new Game.Proto.Game.GameClient(channel);
+                            gameClient.RemoteMove(makeMove);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine($"Player {player.Ip}:{player.Port} did not respond -> retry in 1000 ms");
+                            allGood = false;
+                            Thread.Sleep(1000);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        //private static void SetNextPlayerReliable(NetworkPlayer nextPlayer)
+        //{
+        //    var allGood = false;
+        //    while (!allGood)
+        //    {
+        //        allGood = true;
+        //        try
+        //        {
+        //            using var c = GrpcChannel.ForAddress($"http://{nextPlayer.Ip}:{nextPlayer.Port}");
+        //            var gClient = new Game.Proto.Game.GameClient(c);
+        //            gClient.SetCurrentPlayer(new SetCurrentPlayerRequest());
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            Console.WriteLine($"Player {nextPlayer.Ip}:{nextPlayer.Port} did not respond -> retry in 1000 ms");
+        //            allGood = false;
+        //            Thread.Sleep(1000);
+        //        }
+        //    }
+        //}
     }
 }

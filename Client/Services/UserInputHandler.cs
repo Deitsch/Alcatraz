@@ -25,14 +25,12 @@ namespace Client.Services
         private static Lobby.Proto.Lobby.LobbyClient lobbyClient;
         private static Player _player;
         private static string _currentLobbyId;
-        private static Random random;
         private static bool PlayerIsInLobby => _player.PlayerState == PlayerState.InLobby;
         private static bool PlayerIsInGame => GameService.PlayerState == Game.Proto.PlayerState.InGame;
 
         public UserInputHandler(ChannelBase channel, Player player)
         {
             _player = player;
-            random = new Random();
             lobbyClient = new Lobby.Proto.Lobby.LobbyClient(channel);
         }
 
@@ -63,133 +61,11 @@ namespace Client.Services
                     case "start":
                         StartGame(_currentLobbyId);
                         break;
-                    case "move":
-                        DoMove();
-                        break;
-                    case "debug":
-                        Debug();
-                        break;
                     default:
                         Console.WriteLine("Invalid input");
                         break;
                 }
                 userInput = Console.ReadLine();
-            }
-        }
-
-        private void DoMove()
-        {
-            if (PlayerIsInGame)
-            {
-                if (GameService.ItsMyTurn)
-                {
-                    var makeMove = new MakeMoveRequest
-                    {
-                        MoveInfo = new MoveInfo
-                        {
-                            Id = Guid.NewGuid().ToString(),
-                            PlayerName = _player.Name,
-                            Prisoner = new Prisoner {OldPoint = null, NewPoint = new Point {X = random.Next(0,10), Y = random.Next(0, 10) },}
-                        }
-                    };
-                    MakeReliableMove(makeMove);
-                    Console.WriteLine("You made a move!");
-
-                    var nextPlayer = GameService.NetworkPlayers[(GameService.Index + 1) % GameService.NetworkPlayers.Count];
-                    SetNextPlayerReliable(nextPlayer);
-                }
-                else
-                {
-                    Console.WriteLine("It's not your turn");
-                }
-            }
-            else
-            {
-                Console.WriteLine("You are not in a game!");
-            }
-        }
-
-        private void Debug()
-        {
-            var makeMove = new MakeMoveRequest
-            {
-                MoveInfo = new MoveInfo
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    PlayerName = _player.Name,
-                    Prisoner = new Prisoner { OldPoint = null, NewPoint = new Point { X = random.Next(0, 10), Y = random.Next(0, 10) }, }
-                }
-            };
-            DebugMove(makeMove);
-            Console.WriteLine("You made a move!");
-        }
-
-        private static void DebugMove(MakeMoveRequest makeMove)
-        {
-            Console.Write("Debug Port: ");
-            var port = Console.ReadLine();
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            var channel = GrpcChannel.ForAddress($"http://localhost:{port}");
-            using (channel)
-            {
-                var gameClient = new Game.Proto.Game.GameClient(channel);
-                gameClient.MakeMove(makeMove);
-            }
-            Console.WriteLine("Debug done");
-        }
-
-        private static void SetNextPlayerReliable(NetworkPlayer nextPlayer)
-        {
-            var allGood = false;
-            while (!allGood)
-            {
-                allGood = true;
-                try
-                {
-                    
-                    using var c = GrpcChannel.ForAddress($"http://{nextPlayer.Ip}:{nextPlayer.Port}");
-                    var gClient = new Game.Proto.Game.GameClient(c);
-                    gClient.SetCurrentPlayer(new SetCurrentPlayerRequest());
-                    GameService.ItsMyTurn = false;
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Next Player did not respond -> retry in 1000 ms");
-                    allGood = false;
-                    Thread.Sleep(1000);
-                }
-            }
-
-        }
-
-        private static void MakeReliableMove(MakeMoveRequest makeMove)
-        {
-            var allGood = false;
-            while (!allGood)
-            {
-                allGood = true;
-                for (var index = 0; index < GameService.NetworkPlayers.Count; index++)
-                {
-                    var player = GameService.NetworkPlayers[index];
-                    try
-                    {
-                        AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport",
-                            true);
-                        var channel = GrpcChannel.ForAddress($"http://{player.Ip}:{player.Port}");
-                        using (channel)
-                        {
-                            var gameClient = new Game.Proto.Game.GameClient(channel);
-                            gameClient.MakeMove(makeMove);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine("Some Player did not respond -> retry in 1000 ms");
-                        allGood = false;
-                        Thread.Sleep(1000);
-                        break;
-                    }
-                }
             }
         }
 

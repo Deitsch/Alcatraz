@@ -6,14 +6,7 @@ option csharp_namespace = "Client.Game.Proto";
 service Game {
 	rpc InitGame (InitGameRequest) returns (InitGameResponse);
 	rpc SetCurrentPlayer (SetCurrentPlayerRequest) returns (SetCurrentPlayerResponse);
-	rpc MakeMove (MakeMoveRequest) returns (MakeMoveResponse);
-}
-
-message GetRequest{
-}
-
-message GetReply{
-	string id = 1;
+	rpc RemoteMove (MakeMoveRequest) returns (MakeMoveResponse);
 }
 
 message InitGameRequest{
@@ -32,7 +25,7 @@ message SetCurrentPlayerResponse{
 }
 
 message MakeMoveRequest{
-	MoveInfo moveInfo = 1;
+	MoveInformation moveInfo = 1;
 }
 
 message MakeMoveResponse{
@@ -42,23 +35,16 @@ message NetworkPlayer {
 	string ip = 1;
 	int32 port = 2;
 	string name = 3;
-	PlayerState playerState = 4;
 }
 
 message GameInfo {
 	int32 index = 1;
 	repeated NetworkPlayer players = 2;
-
 }
 
-message Point{
-	int32 x = 1;
-	int32 y = 2;
-}
 
-message Prisoner{
-	Point oldPoint = 1;
-	Point newPoint = 2;
+message AlcatrazFigure{
+	int32 id = 1;
 }
 
 enum PlayerState{
@@ -67,8 +53,11 @@ enum PlayerState{
 	InGame = 2;
 }
 
-message MoveInfo {
+message MoveInformation {
 	string id = 1;
-	string playerName = 2;
-	Prisoner prisoner = 3;
+	int32 player = 2;
+	AlcatrazFigure prisoner = 3;
+	int32 rowOrCol = 4;
+	int32 row = 5;
+	int32 col = 6;
 }

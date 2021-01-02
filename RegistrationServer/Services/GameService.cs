@@ -26,8 +26,8 @@ namespace RegistrationServer.Services
             }
 
             InitGameReliable(lobby, gameInfo);
-            var firstPlayer = gameInfo.Players.First();
-            SetNextPlayerReliable(firstPlayer);
+            //var firstPlayer = gameInfo.Players.First();
+            //SetNextPlayerReliable(firstPlayer);
             Console.WriteLine("Game started!");
         }
 
@@ -43,7 +43,7 @@ namespace RegistrationServer.Services
                     try
                     {
                         AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-                        gameInfo.Index = index;
+                        gameInfo.PlayerIndex = index;
                         var channel = GrpcChannel.ForAddress($"http://{player.Ip}:{player.Port}");
                         using (channel)
                         {
@@ -70,7 +70,6 @@ namespace RegistrationServer.Services
                 allGood = true;
                 try
                 {
-                    
                     using var c = GrpcChannel.ForAddress($"http://{firstPlayer.Ip}:{firstPlayer.Port}");
                     var gClient = new Game.Proto.Game.GameClient(c);
                     gClient.SetCurrentPlayer(new SetCurrentPlayerRequest());
@@ -90,7 +89,7 @@ namespace RegistrationServer.Services
             {
                 Name = lobbyPlayer.Name,
                 Ip = lobbyPlayer.Ip,
-                Port = lobbyPlayer.Port,
+                Port = lobbyPlayer.Port
             };
         }
     }
