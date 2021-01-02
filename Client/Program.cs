@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Windows.Forms;
 using Client.Services;
 using Grpc.Net.Client;
 using Microsoft.AspNetCore;
@@ -14,8 +11,6 @@ namespace Client
 {
     public class Program
     {
-        public static Form MainForm { get; private set; }
-        public static MoveListener move { get; private set; }
 
         private static UserInputHandler _userInputHandler;
 
@@ -33,7 +28,6 @@ namespace Client
 
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             using var channel = GrpcChannel.ForAddress($"http://127.0.0.1:5001");
-            //var gameClient = new Game.Proto.Game.GameClient(channel);
 
             var player = new Player
             {
