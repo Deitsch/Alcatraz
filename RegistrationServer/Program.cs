@@ -16,29 +16,20 @@ namespace RegistrationServer
         {
             //dsi.bplaced.net dsi123456
             //dsi_registry.bplaced.net supersec
-            List<string> addresses = new List<string>();
-            var client = new WebClient();
-            client.Credentials = new NetworkCredential("dsi_registry", "supersec");
 
-            Stream myStream = client.OpenRead("ftp://dsi.bplaced.net/dsi.txt");
-            StreamReader sr = new StreamReader(myStream);
-            while (sr.Peek() >= 0)
+            string hostname = Dns.GetHostName();
+            IPHostEntry host = Dns.GetHostEntry(hostname);
+
+            string ip = "";
+            foreach (IPAddress address in host.AddressList)
             {
-                addresses.Add(sr.ReadLine());
+                if (address.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    ip = address.ToString();
+                    break;
+                }
             }
-            myStream.Close();
-
-            Console.WriteLine("Registered Server: " + String.Join(",", addresses));
-
-            var ip = GetLocalIPv4(NetworkInterfaceType.Ethernet);
-
-            var port = 5001; //new Random().Next(5000, 5049);
-
-            //using (var client = new WebClient())
-            //{
-            //    client.Credentials = new NetworkCredential("dsi_registry", "supersec");
-            //    client.UploadFile("ftp://dsi.bplaced.net/path.txt", WebRequestMethods.Ftp.UploadFile, localFile);
-            //}
+            var port = new Random().Next(5000, 5500);
 
             var webHost = CreateHostBuilder(args, ip, port.ToString()).Build();
             webHost.Start();
@@ -54,25 +45,6 @@ namespace RegistrationServer
                      webBuilder.UseStartup<Startup>();
                      webBuilder.UseUrls($"http://{ip}:{port}");
                 });
-
-        public static string GetLocalIPv4(NetworkInterfaceType _type)
-        {
-            string output = "";
-            foreach (NetworkInterface item in NetworkInterface.GetAllNetworkInterfaces())
-            {
-                if (item.NetworkInterfaceType == _type && item.OperationalStatus == OperationalStatus.Up)
-                {
-                    foreach (UnicastIPAddressInformation ip in item.GetIPProperties().UnicastAddresses)
-                    {
-                        if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
-                        {
-                            output = ip.Address.ToString();
-                        }
-                    }
-                }
-            }
-            return output;
-        }
 
     }
 }

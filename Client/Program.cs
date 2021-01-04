@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using Client.Services;
@@ -21,10 +22,20 @@ namespace Client
             Console.Write("Enter Player Name: ");
             var playerName = Console.ReadLine();
 
-            // Ethernet: NetworkInterfaceType.Ethernet
-            // Wireless: NetworkInterfaceType.Wireless80211
-            var ip = GetLocalIPv4(NetworkInterfaceType.Ethernet);
-            var port = new Random().Next(5050, 5999);
+
+            string hostname = Dns.GetHostName();
+            IPHostEntry host = Dns.GetHostEntry(hostname);
+
+            string ip = "";
+            foreach (IPAddress address in host.AddressList)
+            {
+                if (address.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    ip = address.ToString();
+                    break;
+                }
+            }
+            var port = new Random().Next(5501, 5999);
 
             CreateWebHostBuilder(args, ip ,port.ToString()).Build().RunAsync();
 
@@ -35,7 +46,7 @@ namespace Client
                 Name = playerName,
                 PlayerState = PlayerState.Unknown,
             };
-            _userInputHandler = new LobbyHandler(ip, 5000, player);
+            _userInputHandler = new LobbyHandler(player);
             _userInputHandler.HandleUserInput();
         }
 
@@ -43,24 +54,5 @@ namespace Client
             WebHost.CreateDefaultBuilder(args)
                 .UseUrls($"http://{ip}:{port}")
                 .UseStartup<Startup>();
-
-        public static string GetLocalIPv4(NetworkInterfaceType _type)
-        {
-            string output = "";
-            foreach (NetworkInterface item in NetworkInterface.GetAllNetworkInterfaces())
-            {
-                if (item.NetworkInterfaceType == _type && item.OperationalStatus == OperationalStatus.Up)
-                {
-                    foreach (UnicastIPAddressInformation ip in item.GetIPProperties().UnicastAddresses)
-                    {
-                        if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
-                        {
-                            output = ip.Address.ToString();
-                        }
-                    }
-                }
-            }
-            return output;
-        }
     }
 }
