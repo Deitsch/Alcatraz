@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
 using Grpc.Core;
-using Grpc.Net.Client;
-using Client.Game.Proto;
 using Client.Lobby.Proto;
 using Client.Controllers;
 using PlayerState = Client.Lobby.Proto.PlayerState;
+using Grpc.Net.Client;
+using Microsoft.Extensions.Logging;
 
 namespace Client.Services
 {
-    public class UserInputHandler
+    public class LobbyHandler
     {
         private static string helpText =
             $"Use following commands to interact with server:{Environment.NewLine}" +
@@ -23,13 +22,19 @@ namespace Client.Services
             $"exit -> Exit";
         private static Lobby.Proto.Lobby.LobbyClient lobbyClient;
         private static Player _player;
+        private string _serverIp;
+        private int _serverPort;
         private static string _currentLobbyId;
         private static bool PlayerIsInLobby => _player.PlayerState == PlayerState.InLobby;
         private static bool PlayerIsInGame => GameService.PlayerState == Game.Proto.PlayerState.InGame;
 
-        public UserInputHandler(ChannelBase channel, Player player)
+        public LobbyHandler(string startIp, int startPort, Player player)
         {
             _player = player;
+            _serverIp = startIp;
+            _serverPort = startPort;
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+            using var channel = GrpcChannel.ForAddress($"http://{_serverIp}:{_serverPort}");
             lobbyClient = new Lobby.Proto.Lobby.LobbyClient(channel);
         }
 
@@ -111,16 +116,25 @@ namespace Client.Services
 
         private void GetLobbies()
         {
-            var reply = lobbyClient.GetLobbies(new GetLobbiesRequest());
-            if(reply.Lobbies.Count == 0)
+            try
             {
-                Console.WriteLine("No Lobbies found");
-            }
+                var reply = lobbyClient.GetLobbies(new GetLobbiesRequest());
+                if (reply.Lobbies.Count == 0)
+                {
+                    Console.WriteLine("No Lobbies found");
+                }
 
-            foreach (var lobby in reply.Lobbies)
+                foreach (var lobby in reply.Lobbies)
+                {
+                    Console.WriteLine(
+                        $"LobbyId: {lobby.Id} Players in Lobby: {lobby.Players.Count} PlayerNames: {string.Join(", ", lobby.Players.Select(x => x.Name))}");
+                }
+            }
+            catch(ObjectDisposedException e)
             {
-                Console.WriteLine(
-                    $"LobbyId: {lobby.Id} Players in Lobby: {lobby.Players.Count} PlayerNames: {string.Join(", ", lobby.Players.Select(x => x.Name))}");
+                Console.Error.WriteLine($"Registration Server {_serverIp}:{_serverPort} not found");
+                setNextServer();
+                GetLobbies();
             }
         }
 
@@ -181,6 +195,14 @@ namespace Client.Services
             {
                 Console.WriteLine(e.Message);
             }
+        }
+
+        private void setNextServer()
+        {
+            _serverPort += 1;
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+            using var channel = GrpcChannel.ForAddress($"http://{_serverIp}:{_serverPort}");
+            lobbyClient = new Lobby.Proto.Lobby.LobbyClient(channel);
         }
     }
 }
