@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace RegistrationServer.Services
@@ -11,16 +12,21 @@ namespace RegistrationServer.Services
     {
         public static void updateAddresses(List<string> addresses)
         {
-            var client = new WebClient();
-            client.Credentials = new NetworkCredential("alcatraz", "campus09");
+            WriteToFtp("IpAddresses.txt","testip:1212, 192.168.0.12");
+        }
 
-            using (var myStream = client.OpenWrite("ftp://alcatraz.bplaced.net/dsi.txt"))
+        private static void WriteToFtp(string filename, string message)
+        {
+            var request = (FtpWebRequest) WebRequest.Create("ftp://alcatraz.bplaced.net/"+filename);
+            request.Method = WebRequestMethods.Ftp.UploadFile;
+            request.Credentials = new NetworkCredential("alcatraz", "campus09");
+            using (Stream requestStream = request.GetRequestStream())
             {
-                using (var stream = GenerateStreamFromString("Frolo69"))
-                {
-                    stream.CopyTo(myStream);
-                }
+                var content = Encoding.Default.GetBytes(message);
+                requestStream.Write(content, 0, content.Length);
             }
+
+            request.Abort();
         }
 
         public static bool DeleteFileOnServer(Uri serverUri)
