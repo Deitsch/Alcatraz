@@ -7,11 +7,13 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using RegistrationServer.Services;
 
 namespace RegistrationServer
 {
     public class Program
     {
+        
         public static void Main(string[] args)
         {
             //dsi.bplaced.net dsi123456
@@ -30,6 +32,11 @@ namespace RegistrationServer
                 }
             }
             var port = new Random().Next(5000, 5500);
+
+            List<string> myAddress = new List<string>();
+            myAddress.Add(ip + port);
+
+            FtpService.updateAddresses(myAddress);
 
             var webHost = CreateHostBuilder(args, ip, port.ToString()).Build();
             webHost.Start();
