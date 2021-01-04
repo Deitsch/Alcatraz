@@ -7,6 +7,7 @@
         ToReplicas,
         AcknToPrimary,
         ToOriginalSenderSuccessfully,
-        ToOriginalSenderNotSuccessfully
+        ToOriginalSenderNotSuccessfully,
+        UpdateDb
     }
 }

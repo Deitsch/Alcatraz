@@ -1,10 +1,12 @@
 ﻿using RegistrationServer.Listener;
+using RegistrationServer.Repositories;
 using RegistrationServer.Spread.Interface;
 using RegistrationServer.utils;
 using spread;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace RegistrationServer.Spread
 {
@@ -33,11 +35,13 @@ namespace RegistrationServer.Spread
 
         private readonly ISpreadConnectionWrapper connection;
         private readonly MessageListener messageListener;
+        private readonly LobbyRepository lobbyRepository;
 
-        public SpreadService(ISpreadConnectionWrapper connection, MessageListener messageListener)
+        public SpreadService(ISpreadConnectionWrapper connection, MessageListener messageListener, LobbyRepository lobbyRepository)
 		{ 
             this.connection = connection;
             this.messageListener = messageListener;
+            this.lobbyRepository = lobbyRepository;
         }
 
         public void Run()
@@ -50,7 +54,7 @@ namespace RegistrationServer.Spread
             }
         }
 
-		private void HandleMessage(SpreadMessage message)
+        private void HandleMessage(SpreadMessage message)
 		{
 			if (message.IsMembership)
 			{
@@ -61,7 +65,10 @@ namespace RegistrationServer.Spread
 				if (info.IsCausedByJoin)
 				{
 					if (IsPrimary)
+                    {
 						SendMulticast(MulticastType.NewPrimary, UserName);
+						SendMulticast(MulticastType.UpdateDb, GetSerializedLobbies());
+					}
 
 					if (info.Members.Length == 1)
 						primaryName = UserName;
@@ -81,8 +88,24 @@ namespace RegistrationServer.Spread
 						primaryName = message.Data.DecodeToString();
 						Console.WriteLine("New Primary was set: " + primaryName);
 						break;
+
+					case MulticastType.UpdateDb:
+						if(!IsPrimary)
+                        {
+							var jsonString = message.Data.DecodeToString();
+							var lobbieDtos = JsonSerializer.Deserialize<List<LobbyInfoDto>>(jsonString);
+							var lobbies = lobbieDtos.Select(lobby => lobby.ToLobbyInfo()).ToList();
+							lobbyRepository.UpdateAll(lobbies);
+						}
+						break;
 				}
 			}
+		}
+
+        private string GetSerializedLobbies()
+        {
+			var lobbies = lobbyRepository.FindAll().Select(lobby => lobby.ToDto()).ToList();
+			return JsonSerializer.Serialize(lobbies);
 		}
 
 		private void UpdateList(SpreadGroup[] actualMembers)

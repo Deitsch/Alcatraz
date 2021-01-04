@@ -1,5 +1,4 @@
-﻿using Grpc.Core;
-using RegistrationServer.Lobby.Proto;
+﻿using RegistrationServer.Lobby.Proto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -65,6 +64,13 @@ namespace RegistrationServer.Repositories
             {
                 Delete(lobbyId);
             }
+        }
+
+        public void UpdateAll(List<LobbyInfo> lobbies)
+        {
+            this.lobbies.Clear();
+            this.lobbies.AddRange(lobbies);
+            Console.WriteLine("lobbies updated successfully");
         }
     }
 }
