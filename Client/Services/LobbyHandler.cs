@@ -38,7 +38,7 @@ namespace Client.Services
             _addresses = getServerAddressesFromFtp();
             if (_addresses.Count == 0)
                 Environment.Exit(1);
-            setNextServer();
+            setNextServer(true);
         }
 
 
@@ -208,9 +208,10 @@ namespace Client.Services
             }
         }
 
-        private void setNextServer()
+        private void setNextServer(bool initialSet = false)
         {
-            _addresses.RemoveAt(0);
+            if(!initialSet)
+                _addresses.RemoveAt(0);
             if (_addresses.Count == 0)
             {
                 System.Threading.Thread.Sleep(10000);
