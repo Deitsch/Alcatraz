@@ -35,10 +35,10 @@ namespace Client.Services
         public LobbyHandler(Player player)
         {
             _player = player;
-            _addresses = getServerAddressesFromFtp();
+            _addresses = GetServerAddressesFromFtp();
             if (_addresses.Count == 0)
                 Environment.Exit(1);
-            setNextServer(true);
+            SetNextServer(true);
         }
 
 
@@ -86,7 +86,7 @@ namespace Client.Services
             catch (Grpc.Core.RpcException e)
             {
                 Console.Error.WriteLine($"Registration Server {currentServer} not found");
-                setNextServer();
+                SetNextServer();
                 GetLobbies();
             }
         }
@@ -111,7 +111,7 @@ namespace Client.Services
             catch (Grpc.Core.RpcException e)
             {
                 Console.Error.WriteLine($"Registration Server {currentServer} not found");
-                setNextServer();
+                SetNextServer();
                 GetLobbies();
             }
             catch (Exception e)
@@ -140,7 +140,7 @@ namespace Client.Services
             catch(Grpc.Core.RpcException e)
             {
                 Console.Error.WriteLine($"Registration Server {currentServer} not found");
-                setNextServer();
+                SetNextServer();
                 GetLobbies();
             }
         }
@@ -166,7 +166,7 @@ namespace Client.Services
             catch (Grpc.Core.RpcException e)
             {
                 Console.Error.WriteLine($"Registration Server {currentServer} not found");
-                setNextServer();
+                SetNextServer();
                 GetLobbies();
             }
             catch (Exception e)
@@ -199,7 +199,7 @@ namespace Client.Services
             catch (Grpc.Core.RpcException e)
             {
                 Console.Error.WriteLine($"Registration Server {currentServer} not found");
-                setNextServer();
+                SetNextServer();
                 GetLobbies();
             }
             catch (Exception e)
@@ -208,34 +208,45 @@ namespace Client.Services
             }
         }
 
-        private void setNextServer(bool initialSet = false)
+        private void SetNextServer(bool initialSet = false)
         {
             if(!initialSet)
                 _addresses.RemoveAt(0);
             if (_addresses.Count == 0)
             {
                 System.Threading.Thread.Sleep(10000);
-                _addresses = getServerAddressesFromFtp();
+                _addresses = GetServerAddressesFromFtp();
             }
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             var channel = GrpcChannel.ForAddress($"http://{currentServer}");
             lobbyClient = new Lobby.Proto.Lobby.LobbyClient(channel);
         }
 
-        public static List<string> getServerAddressesFromFtp()
+        public static List<string> GetServerAddressesFromFtp()
         {
-            List<string> addresses = new List<string>();
-            var client = new WebClient();
-            client.Credentials = new NetworkCredential("alcatraz", "campus09");
+            const string USERNAME = "alcatraz";
+            const string PASSWORD = "campus09";
+            const string FTP_URL = "ftp://alcatraz.bplaced.net/";
+            const string IP_ADDRESSES_FILENAME = "IpAddresses.txt";
+            const string IP_ADDRESSES_DELIMITER = ",";
 
-            Stream myStream = client.OpenRead("ftp://alcatraz.bplaced.net/dsi.txt");
+            List<string> input = new List<string>();
+            var client = new WebClient
+            {
+                Credentials = new NetworkCredential(USERNAME, PASSWORD)
+            };
+
+            Stream myStream = client.OpenRead(FTP_URL + IP_ADDRESSES_FILENAME);
             StreamReader sr = new StreamReader(myStream);
             while (sr.Peek() >= 0)
             {
-                addresses.Add(sr.ReadLine());
+                input.Add(sr.ReadLine());
             }
             myStream.Close();
-            Console.WriteLine("Registered Servers: " + String.Join(", ", addresses));
+
+            List<string> addresses = input.First().Split(IP_ADDRESSES_DELIMITER).ToList();
+
+            Console.WriteLine("Registered Servers: " + input);
             return addresses;
         }
     }
