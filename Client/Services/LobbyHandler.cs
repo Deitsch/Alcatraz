@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
 using Grpc.Core;
-using Grpc.Net.Client;
-using Client.Game.Proto;
 using Client.Lobby.Proto;
 using Client.Controllers;
 using PlayerState = Client.Lobby.Proto.PlayerState;
+using Grpc.Net.Client;
+using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.Net;
+using System.IO;
 
 namespace Client.Services
 {
-    public class UserInputHandler
+    public class LobbyHandler
     {
         private static string helpText =
             $"Use following commands to interact with server:{Environment.NewLine}" +
@@ -23,14 +25,20 @@ namespace Client.Services
             $"exit -> Exit";
         private static Lobby.Proto.Lobby.LobbyClient lobbyClient;
         private static Player _player;
+        private List<string> _addresses;
+        private string currentServer => _addresses.First();
+
         private static string _currentLobbyId;
         private static bool PlayerIsInLobby => _player.PlayerState == PlayerState.InLobby;
         private static bool PlayerIsInGame => GameService.PlayerState == Game.Proto.PlayerState.InGame;
 
-        public UserInputHandler(ChannelBase channel, Player player)
+        public LobbyHandler(Player player)
         {
             _player = player;
-            lobbyClient = new Lobby.Proto.Lobby.LobbyClient(channel);
+            _addresses = GetServerAddressesFromFtp();
+            if (_addresses.Count == 0)
+                Environment.Exit(1);
+            SetNextServer(true);
         }
 
 
@@ -68,16 +76,18 @@ namespace Client.Services
             }
         }
 
-        private static void StartGame(string lobbyId)
+        private void StartGame(string lobbyId)
         {
             try
             {
                 lobbyClient.RequestGameStart(new RequestGameStartRequest { LobbyId = lobbyId });
                 Console.WriteLine($"Game of Lobby {lobbyId} started!");
             }
-            catch (RpcException rpcException)
+            catch (Grpc.Core.RpcException e)
             {
-                Console.WriteLine($"ERROR: {rpcException.StatusCode} {rpcException.Message}");
+                Console.Error.WriteLine($"Registration Server {currentServer} not found");
+                SetNextServer();
+                GetLobbies();
             }
         }
 
@@ -98,9 +108,11 @@ namespace Client.Services
                     Console.WriteLine("You are not in a lobby");
                 }
             }
-            catch (RpcException rpcException)
+            catch (Grpc.Core.RpcException e)
             {
-                Console.WriteLine($"ERROR: {rpcException.StatusCode} {rpcException.Message}");
+                Console.Error.WriteLine($"Registration Server {currentServer} not found");
+                SetNextServer();
+                GetLobbies();
             }
             catch (Exception e)
             {
@@ -111,20 +123,29 @@ namespace Client.Services
 
         private void GetLobbies()
         {
-            var reply = lobbyClient.GetLobbies(new GetLobbiesRequest());
-            if(reply.Lobbies.Count == 0)
+            try
             {
-                Console.WriteLine("No Lobbies found");
-            }
+                var reply = lobbyClient.GetLobbies(new GetLobbiesRequest());
+                if (reply.Lobbies.Count == 0)
+                {
+                    Console.WriteLine("No Lobbies found");
+                }
 
-            foreach (var lobby in reply.Lobbies)
+                foreach (var lobby in reply.Lobbies)
+                {
+                    Console.WriteLine(
+                        $"LobbyId: {lobby.Id} Players in Lobby: {lobby.Players.Count} PlayerNames: {string.Join(", ", lobby.Players.Select(x => x.Name))}");
+                }
+            }
+            catch(Grpc.Core.RpcException e)
             {
-                Console.WriteLine(
-                    $"LobbyId: {lobby.Id} Players in Lobby: {lobby.Players.Count} PlayerNames: {string.Join(", ", lobby.Players.Select(x => x.Name))}");
+                Console.Error.WriteLine($"Registration Server {currentServer} not found");
+                SetNextServer();
+                GetLobbies();
             }
         }
 
-        private static void CreateLobby(Player player)
+        private void CreateLobby(Player player)
         {
             try
             {
@@ -142,9 +163,11 @@ namespace Client.Services
                     Console.WriteLine("You are already in a lobby");
                 }
             }
-            catch (RpcException rpcException)
+            catch (Grpc.Core.RpcException e)
             {
-                Console.WriteLine($"ERROR: {rpcException.StatusCode} {rpcException.Message}");
+                Console.Error.WriteLine($"Registration Server {currentServer} not found");
+                SetNextServer();
+                GetLobbies();
             }
             catch (Exception e)
             {
@@ -173,14 +196,58 @@ namespace Client.Services
                     Console.WriteLine("You are already in a lobby");
                 }
             }
-            catch (RpcException rpcException)
+            catch (Grpc.Core.RpcException e)
             {
-                Console.WriteLine($"ERROR: {rpcException.StatusCode} {rpcException.Message}");
+                Console.Error.WriteLine($"Registration Server {currentServer} not found");
+                SetNextServer();
+                GetLobbies();
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
             }
+        }
+
+        private void SetNextServer(bool initialSet = false)
+        {
+            if(!initialSet)
+                _addresses.RemoveAt(0);
+            if (_addresses.Count == 0)
+            {
+                System.Threading.Thread.Sleep(10000);
+                _addresses = GetServerAddressesFromFtp();
+            }
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+            var channel = GrpcChannel.ForAddress($"http://{currentServer}");
+            lobbyClient = new Lobby.Proto.Lobby.LobbyClient(channel);
+        }
+
+        public static List<string> GetServerAddressesFromFtp()
+        {
+            const string USERNAME = "alcatraz";
+            const string PASSWORD = "campus09";
+            const string FTP_URL = "ftp://alcatraz.bplaced.net/";
+            const string IP_ADDRESSES_FILENAME = "IpAddresses.txt";
+            const string IP_ADDRESSES_DELIMITER = ",";
+
+            List<string> input = new List<string>();
+            var client = new WebClient
+            {
+                Credentials = new NetworkCredential(USERNAME, PASSWORD)
+            };
+
+            Stream myStream = client.OpenRead(FTP_URL + IP_ADDRESSES_FILENAME);
+            StreamReader sr = new StreamReader(myStream);
+            while (sr.Peek() >= 0)
+            {
+                input.Add(sr.ReadLine());
+            }
+            myStream.Close();
+
+            List<string> addresses = input.First().Split(IP_ADDRESSES_DELIMITER).ToList();
+
+            Console.WriteLine("Registered Servers: " + input);
+            return addresses;
         }
     }
 }

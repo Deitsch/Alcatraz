@@ -1,17 +1,37 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using RegistrationServer.Services;
+using RegistrationServer.utils;
 
 namespace RegistrationServer
 {
     public class Program
     {
+        
         public static void Main(string[] args)
         {
-            Console.Write("Enter your ip: ");
-            var ip = Console.ReadLine();
-            Console.Write("Enter your port: ");
-            var port = Console.ReadLine();
+            //dsi.bplaced.net dsi123456
+            //dsi_registry.bplaced.net supersec
+
+            string port = NetworkUtils.SelectNextPort();
+            string ip = NetworkUtils.GetIpAddress();
+
+            if(string.IsNullOrWhiteSpace(ip))
+            {
+                Console.WriteLine("Ip not valid!");
+                Console.ReadLine();
+                Environment.Exit(0);
+            }
+            if (string.IsNullOrWhiteSpace(port))
+            {
+                Console.WriteLine("All available ports are already in use!");
+                Console.ReadLine();
+                Environment.Exit(0);
+            }
+
             var webHost = CreateHostBuilder(args, ip, port).Build();
             webHost.Start();
             webHost.WaitForShutdown();

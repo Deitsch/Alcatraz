@@ -8,6 +8,7 @@
         AcknToPrimary,
         ToOriginalSenderSuccessfully,
         ToOriginalSenderNotSuccessfully,
-        UpdateDb
+        UpdateDb,
+        StartUpdateIpAddressesOperation
     }
 }

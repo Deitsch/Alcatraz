@@ -2,9 +2,6 @@
 using RegistrationServer.Repositories;
 using RegistrationServer.Spread.Enums;
 using RegistrationServer.Spread.Interface;
-using RegistrationServer.utils;
-using spread;
-using System;
 
 namespace RegistrationServer.Spread
 {
@@ -18,9 +15,9 @@ namespace RegistrationServer.Spread
             this.lobbyRepository = lobbyRepository;
         }
 
-        protected override void SpecificOperation(SpreadMessage message)
+        protected override void SpecificOperation(SpreadDto spreadDto)
         {
-            lobbyRepository.JoinLobby(message.LobbyId(), message.Player());
+            lobbyRepository.JoinLobby(spreadDto.LobbyId, spreadDto.Player);
         }
     }
 }
