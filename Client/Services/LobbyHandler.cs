@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Linq;
-using Grpc.Core;
 using Client.Lobby.Proto;
 using Client.Controllers;
 using PlayerState = Client.Lobby.Proto.PlayerState;
 using Grpc.Net.Client;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Net;
 using System.IO;
@@ -246,7 +244,7 @@ namespace Client.Services
 
             List<string> addresses = input.First().Split(IP_ADDRESSES_DELIMITER).ToList();
 
-            Console.WriteLine("Registered Servers: " + input);
+            Console.WriteLine("Registered Servers: " + input.First());
             return addresses;
         }
     }
