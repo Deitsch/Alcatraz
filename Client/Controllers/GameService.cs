@@ -44,6 +44,7 @@ namespace Client.Controllers
                 Application.SetCompatibleTextRenderingDefault(false);
                 game = new Alcatraz.Alcatraz();
                 moveListener = new MoveListener(this);
+                game.getWindow().FormClosed += new FormClosedEventHandler(FormClosed);
 
                 game.init(request.GameInfo.Players.Count, Index);
                 
@@ -73,6 +74,11 @@ namespace Client.Controllers
             Application.Run();
         }
 
+        public static void FormClosed(object sender, FormClosedEventArgs args)
+        {
+            Environment.Exit(0);
+        }
+
         //public override Task<SetCurrentPlayerResponse> SetCurrentPlayer(SetCurrentPlayerRequest request, ServerCallContext context)
         //{
         //    if (initGameToken != request.Id)
@@ -90,10 +96,8 @@ namespace Client.Controllers
         public override Task<MakeMoveResponse> RemoteMove(MakeMoveRequest request, ServerCallContext context)
         {
             MoveInformation moveInfo = request.MoveInfo;
-            //check idempotency token
-            if (lastMoveToken != request.MoveInfo.Id)
+            if (lastMoveToken != moveInfo.Id)
             {
-                //execute move
                 Alcatraz.Player player = game.getPlayer(moveInfo.Player);
                 Alcatraz.Prisoner prisoner = game.getPrisoner(moveInfo.Prisoner.Id);
                 Console.WriteLine("Player: " + player.Name + " id: " + player.Id + " is moving " + prisoner + " to " + (moveInfo.RowOrCol == Alcatraz.Alcatraz.ROW ? "row" : "col") + " " + (moveInfo.RowOrCol == Alcatraz.Alcatraz.ROW ? moveInfo.Row : moveInfo.Col));
@@ -102,7 +106,6 @@ namespace Client.Controllers
             }
             else
             {
-                //already done, other player has not received
                 Console.WriteLine($"Received move {lastMoveToken} more than once -> skip");
             }
             

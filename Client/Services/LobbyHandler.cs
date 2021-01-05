@@ -80,8 +80,13 @@ namespace Client.Services
         {
             try
             {
-                lobbyClient.RequestGameStart(new RequestGameStartRequest { LobbyId = lobbyId });
-                Console.WriteLine($"Game of Lobby {lobbyId} started!");
+                if (PlayerIsInLobby)
+                {
+                    lobbyClient.RequestGameStart(new RequestGameStartRequest { LobbyId = lobbyId });
+                    Console.WriteLine($"Game of Lobby {lobbyId} started!");
+                }
+                else
+                    Console.WriteLine("You are not in a Lobby");
             }
             catch (Grpc.Core.RpcException e)
             {
