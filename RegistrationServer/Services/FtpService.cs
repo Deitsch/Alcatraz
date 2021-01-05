@@ -17,6 +17,7 @@ namespace RegistrationServer.Services
 
         public static void UpdateAddresses(List<string> addresses)
         {
+            Console.WriteLine("Write ip adresses to ftp server");
             WriteToFtp(IP_ADDRESSES_FILENAME, string.Join(IP_ADDRESSES_DELIMITER, addresses));
         }
 

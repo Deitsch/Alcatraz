@@ -144,6 +144,9 @@ namespace RegistrationServer.Spread
             }
             else
             {
+                if(operationType == OperationType.UpdateIpAddresses)
+                    SpecificOperation(message.ToSpreadDto());
+
                 Console.WriteLine("Send 'not successfully' to Original Sender");
                 spreadService.SendMulticast(MulticastType.ToOriginalSenderNotSuccessfully, message.Data);
             }
