@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using Client.Services;
-using Grpc.Net.Client;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
@@ -12,7 +14,7 @@ namespace Client
     public class Program
     {
 
-        private static UserInputHandler _userInputHandler;
+        private static LobbyHandler _userInputHandler;
 
         [STAThread]
         public static void Main(string[] args)
@@ -20,32 +22,37 @@ namespace Client
             Console.Write("Enter Player Name: ");
             var playerName = Console.ReadLine();
 
-            // we will use a static port but we need a virtual machine or smth
-            Console.Write("Port: ");
-            var port = Console.ReadLine();
 
-            CreateWebHostBuilder(args, port).Build().RunAsync();
+            string hostname = Dns.GetHostName();
+            IPHostEntry host = Dns.GetHostEntry(hostname);
 
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-            using var channel = GrpcChannel.ForAddress($"http://127.0.0.1:5001");
+            string ip = "";
+            foreach (IPAddress address in host.AddressList)
+            {
+                if (address.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    ip = address.ToString();
+                    break;
+                }
+            }
+            var port = new Random().Next(5501, 5999);
+
+            CreateWebHostBuilder(args, ip ,port.ToString()).Build().RunAsync();
 
             var player = new Player
             {
-                Ip = "127.0.0.1",
-                //Ip = ip,
-                Port = Convert.ToInt32(port),
+                Ip = ip,
+                Port = port,
                 Name = playerName,
                 PlayerState = PlayerState.Unknown,
             };
-
-            _userInputHandler = new UserInputHandler(channel, player);
+            _userInputHandler = new LobbyHandler(player);
             _userInputHandler.HandleUserInput();
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args, string port = "5002") =>
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args, string ip, string port) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseUrls($"http://localhost:{port}")
+                .UseUrls($"http://{ip}:{port}")
                 .UseStartup<Startup>();
-
     }
 }
