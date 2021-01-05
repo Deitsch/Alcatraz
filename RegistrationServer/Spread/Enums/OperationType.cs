@@ -5,6 +5,7 @@
         CreateLobby,
         JoinLobby,
         LeaveLobby,
-        DeleteLobby
+        DeleteLobby,
+        UpdateIpAddresses
     }
 }

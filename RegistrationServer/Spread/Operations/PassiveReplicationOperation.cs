@@ -7,6 +7,7 @@ using spread;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net.NetworkInformation;
 using System.Text.Json;
 using System.Threading;
 
@@ -15,11 +16,12 @@ namespace RegistrationServer.Spread
     public abstract class PassiveReplicationOperation
     {
         private readonly OperationType operationType;
-        private readonly MessageListener listener;
-        private readonly ISpreadService spreadService;
+        protected readonly MessageListener listener;
+        protected readonly ISpreadService spreadService;
 
         private readonly Dictionary<string, int> acknCount = new Dictionary<string, int>();
         private readonly Dictionary<string, SuccessType> receivedFromPrimary = new Dictionary<string, SuccessType>();
+        protected readonly Dictionary<string, List<string>> ipAddresses = new Dictionary<string, List<string>>();
 
         protected PassiveReplicationOperation(OperationType operationType, MessageListener listener, ISpreadService spreadService)
         {
@@ -28,7 +30,7 @@ namespace RegistrationServer.Spread
             this.spreadService = spreadService;
         }
 
-        protected abstract void SpecificOperation(SpreadMessage message);
+        protected abstract void SpecificOperation(SpreadDto spreadDto);
 
         public void AddListener()
         {
@@ -55,6 +57,7 @@ namespace RegistrationServer.Spread
                     if (spreadService.IsPrimary)
                     {
                         Console.WriteLine("Received on Primary");
+                        ipAddresses.Add(message.LobbyId(), new List<string>());
 
                         Thread thread = new Thread(() => CollectAckn(message));
                         thread.Start();
@@ -69,10 +72,14 @@ namespace RegistrationServer.Spread
                     {
                         Console.WriteLine("Received on Replica");
 
-                        SpecificOperation(message);
+                        var spreadDto = message.ToSpreadDto();
+                        spreadDto.IpWithPort = GetIpWithPort();
+                        string jsonString = JsonSerializer.Serialize(spreadDto);
+
+                        SpecificOperation(spreadDto);
 
                         Console.WriteLine("Send Ackn to Primary");
-                        spreadService.SendMulticast(MulticastType.AcknToPrimary, message.Data);
+                        spreadService.SendMulticast(MulticastType.AcknToPrimary, jsonString);
                     }
                     break;
 
@@ -82,6 +89,7 @@ namespace RegistrationServer.Spread
                         Console.WriteLine("Received ACKN from Replica on Primary");
 
                         ++acknCount[message.LobbyId()];
+                        ipAddresses[message.LobbyId()].Add(message.IpWithPort());
                     }
                     break;
 
@@ -103,6 +111,11 @@ namespace RegistrationServer.Spread
                     }
                     break;
             }
+        }
+
+        protected string GetIpWithPort()
+        {
+            return Utils.GetLocalIPv4(NetworkInterfaceType.Ethernet) + ":" + spreadService.Port;
         }
 
         private void CollectAckn(SpreadMessage message)
@@ -129,7 +142,7 @@ namespace RegistrationServer.Spread
 
             if (allAcknReceived)
             {
-                SpecificOperation(message);
+                SpecificOperation(message.ToSpreadDto());
 
                 Console.WriteLine("Send 'successfully' to Original Sender");
                 spreadService.SendMulticast(MulticastType.ToOriginalSenderSuccessfully, message.Data);
@@ -139,6 +152,8 @@ namespace RegistrationServer.Spread
                 Console.WriteLine("Send 'not successfully' to Original Sender");
                 spreadService.SendMulticast(MulticastType.ToOriginalSenderNotSuccessfully, message.Data);
             }
+
+            ipAddresses.Remove(lobbyId);
         }
 
         private void GetOkFromPrimary(SpreadDto spreadDto)

@@ -3,6 +3,8 @@ using RegistrationServer.Spread;
 using RegistrationServer.Spread.Enums;
 using spread;
 using System;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 
@@ -19,7 +21,7 @@ namespace RegistrationServer.utils
         private static SpreadDto ToSpreadDto(this string jsonString)
             => JsonSerializer.Deserialize<SpreadDto>(jsonString);
 
-        private static SpreadDto ToSpreadDto(this SpreadMessage msg)
+        public static SpreadDto ToSpreadDto(this SpreadMessage msg)
             => msg.Data.DecodeToString().ToSpreadDto();
 
         public static string LobbyId(this SpreadMessage msg)
@@ -30,6 +32,9 @@ namespace RegistrationServer.utils
 
         public static NetworkPlayer Player(this SpreadMessage msg)
             => msg.ToSpreadDto().Player;
+
+        public static string IpWithPort(this SpreadMessage msg)
+            => msg.ToSpreadDto().IpWithPort;
 
         public static LobbyInfoDto ToDto(this LobbyInfo lobbyInfo)
         {
@@ -61,6 +66,25 @@ namespace RegistrationServer.utils
             {
                 return null;
             }
+        }
+
+        public static string GetLocalIPv4(NetworkInterfaceType _type)
+        {
+            string output = "";
+            foreach (NetworkInterface item in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (item.NetworkInterfaceType == _type && item.OperationalStatus == OperationalStatus.Up)
+                {
+                    foreach (UnicastIPAddressInformation ip in item.GetIPProperties().UnicastAddresses)
+                    {
+                        if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
+                        {
+                            output = ip.Address.ToString();
+                        }
+                    }
+                }
+            }
+            return output;
         }
     }
 }

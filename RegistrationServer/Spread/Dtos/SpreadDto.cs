@@ -12,5 +12,7 @@ namespace RegistrationServer.Spread
         public string LobbyId { get; set; }
 
         public NetworkPlayer Player { get; set; }
+
+        public string IpWithPort { get; set; }
     }
 }

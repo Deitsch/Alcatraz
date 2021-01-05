@@ -18,9 +18,9 @@ namespace RegistrationServer.Spread
             this.lobbyRepository = lobbyRepository;
         }
 
-        protected override void SpecificOperation(SpreadMessage message)
+        protected override void SpecificOperation(SpreadDto spreadDto)
         {
-            lobbyRepository.Delete(message.LobbyId());
+            lobbyRepository.Delete(spreadDto.LobbyId);
         }
     }
 }

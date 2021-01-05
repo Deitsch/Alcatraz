@@ -33,6 +33,7 @@ namespace RegistrationServer
             services.AddSingleton<JoinLobbyOperation>();
             services.AddSingleton<LeaveLobbyOperation>();
             services.AddSingleton<DeleteLobbyOperation>();
+            services.AddSingleton<UpdateIpAddressesOperation>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

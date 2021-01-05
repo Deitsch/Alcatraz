@@ -1,5 +1,6 @@
 ﻿using RegistrationServer.Listener;
 using RegistrationServer.Repositories;
+using RegistrationServer.Spread.Enums;
 using RegistrationServer.Spread.Interface;
 using RegistrationServer.utils;
 using spread;
@@ -26,12 +27,14 @@ namespace RegistrationServer.Spread
 			get => connection.UserName;
 		}
 
+		public string Port { get; private set; }
+
 		private bool PrimaryLeft
 		{
 			get => !groupMembers.Contains(primaryName);
 		}
 
-		private string primaryName;
+        private string primaryName;
 
         private readonly ISpreadConnectionWrapper connection;
         private readonly MessageListener messageListener;
@@ -46,6 +49,7 @@ namespace RegistrationServer.Spread
 
         public void Run()
         {
+			Port = "8080"; // ToDo: choose next free port
 			messageListener.Receive += (sender, e) => HandleMessage(e.Message);
 
 			while (true)
@@ -60,7 +64,7 @@ namespace RegistrationServer.Spread
 			{
 				DisplayMembershipMessage(message);
 				MembershipInfo info = message.MembershipInfo;
-				UpdateList(info.Members);
+				UpdateActualMembers(info.Members);
 
 				if (info.IsCausedByJoin)
 				{
@@ -71,7 +75,11 @@ namespace RegistrationServer.Spread
 					}
 
 					if (info.Members.Length == 1)
+                    {
 						primaryName = UserName;
+						// ToDo: write ip address to file
+					}
+
 
 				}
 				else if (info.IsCausedByLeave || info.IsCausedByDisconnect)
@@ -87,6 +95,10 @@ namespace RegistrationServer.Spread
 					case MulticastType.NewPrimary:
 						primaryName = message.Data.DecodeToString();
 						Console.WriteLine("New Primary was set: " + primaryName);
+
+						if(IsPrimary)
+							UpdateIpAddresses();
+
 						break;
 
 					case MulticastType.UpdateDb:
@@ -102,13 +114,26 @@ namespace RegistrationServer.Spread
 			}
 		}
 
+        private void UpdateIpAddresses()
+        {
+			var spreadDto = new SpreadDto
+			{
+				Type = OperationType.UpdateIpAddresses,
+				OriginalSender = UserName,
+				LobbyId = DateTime.Now.ToString()
+			};
+
+			var jsonString = JsonSerializer.Serialize(spreadDto);
+			SendMulticast(MulticastType.StartUpdateIpAddressesOperation, jsonString);
+		}
+
         private string GetSerializedLobbies()
         {
 			var lobbies = lobbyRepository.FindAll().Select(lobby => lobby.ToDto()).ToList();
 			return JsonSerializer.Serialize(lobbies);
 		}
 
-		private void UpdateList(SpreadGroup[] actualMembers)
+		private void UpdateActualMembers(SpreadGroup[] actualMembers)
 		{
 			groupMembers.Clear();
 			groupMembers.AddRange(actualMembers.Select(m => m.ToString().Trim('#').Substring(0, 8)));
