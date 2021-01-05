@@ -23,6 +23,7 @@ namespace Client.Services
         public void gameWon(Player player)
         {
             Console.WriteLine("Player " + player.Id + " wins.");
+            Environment.Exit(0);
         }
 
         public void undoMove()
