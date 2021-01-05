@@ -2,9 +2,6 @@
 using RegistrationServer.Repositories;
 using RegistrationServer.Spread.Enums;
 using RegistrationServer.Spread.Interface;
-using RegistrationServer.utils;
-using spread;
-using System;
 
 namespace RegistrationServer.Spread
 {
