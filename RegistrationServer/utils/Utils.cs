@@ -31,6 +31,26 @@ namespace RegistrationServer.utils
         public static NetworkPlayer Player(this SpreadMessage msg)
             => msg.ToSpreadDto().Player;
 
+        public static LobbyInfoDto ToDto(this LobbyInfo lobbyInfo)
+        {
+            return new LobbyInfoDto
+            {
+                LobbyId = lobbyInfo.Id,
+                Players = lobbyInfo.Players
+            };
+        }
+
+        public static LobbyInfo ToLobbyInfo(this LobbyInfoDto dto)
+        {
+            var lobbyInfo = new LobbyInfo
+            {
+                Id = dto.LobbyId
+            };
+            lobbyInfo.Players.AddRange(dto.Players);
+
+            return lobbyInfo;
+        }
+
         public static OperationType? GetOperationType(this SpreadMessage msg)
         {
             try
