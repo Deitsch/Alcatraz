@@ -7,7 +7,6 @@ using spread;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net.NetworkInformation;
 using System.Text.Json;
 using System.Threading;
 
@@ -39,6 +38,7 @@ namespace RegistrationServer.Spread
 
         public void Execute(SpreadDto spreadDto)
         {
+            Console.WriteLine("Execute " + operationType);
             Console.WriteLine("Send to Primary");
             string jsonString = JsonSerializer.Serialize(spreadDto);
             spreadService.SendMulticast(MulticastType.ToPrimary, jsonString);
@@ -73,7 +73,7 @@ namespace RegistrationServer.Spread
                         Console.WriteLine("Received on Replica");
 
                         var spreadDto = message.ToSpreadDto();
-                        spreadDto.IpWithPort = GetIpWithPort();
+                        spreadDto.IpWithPort = NetworkUtils.GetIpWithPort();
                         string jsonString = JsonSerializer.Serialize(spreadDto);
 
                         SpecificOperation(spreadDto);
@@ -111,11 +111,6 @@ namespace RegistrationServer.Spread
                     }
                     break;
             }
-        }
-
-        protected string GetIpWithPort()
-        {
-            return Utils.GetLocalIPv4(NetworkInterfaceType.Ethernet) + ":" + spreadService.Port;
         }
 
         private void CollectAckn(SpreadMessage message)

@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using RegistrationServer.Services;
+using RegistrationServer.utils;
 
 namespace RegistrationServer
 {
@@ -19,26 +16,23 @@ namespace RegistrationServer
             //dsi.bplaced.net dsi123456
             //dsi_registry.bplaced.net supersec
 
-            string hostname = Dns.GetHostName();
-            IPHostEntry host = Dns.GetHostEntry(hostname);
+            string port = NetworkUtils.SelectNextPort();
+            string ip = NetworkUtils.GetIpAddress();
 
-            string ip = "";
-            foreach (IPAddress address in host.AddressList)
+            if(string.IsNullOrWhiteSpace(ip))
             {
-                if (address.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    ip = address.ToString();
-                    break;
-                }
+                Console.WriteLine("Ip not valid!");
+                Console.ReadLine();
+                Environment.Exit(0);
             }
-            var port = new Random().Next(5000, 5500);
+            if (string.IsNullOrWhiteSpace(port))
+            {
+                Console.WriteLine("All available ports are already in use!");
+                Console.ReadLine();
+                Environment.Exit(0);
+            }
 
-            List<string> myAddress = new List<string>();
-            myAddress.Add(ip + port);
-
-            FtpService.updateAddresses(myAddress);
-
-            var webHost = CreateHostBuilder(args, ip, port.ToString()).Build();
+            var webHost = CreateHostBuilder(args, ip, port).Build();
             webHost.Start();
             webHost.WaitForShutdown();
         }

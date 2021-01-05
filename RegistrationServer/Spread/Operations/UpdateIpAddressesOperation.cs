@@ -1,9 +1,9 @@
 ﻿using RegistrationServer.Listener;
+using RegistrationServer.Services;
 using RegistrationServer.Spread.Enums;
 using RegistrationServer.Spread.Interface;
 using RegistrationServer.utils;
 using spread;
-using System;
 using System.Threading;
 
 namespace RegistrationServer.Spread.Operations
@@ -17,20 +17,14 @@ namespace RegistrationServer.Spread.Operations
         {
             if (spreadService.IsPrimary)
             {
-                ipAddresses[spreadDto.LobbyId].Add(GetIpWithPort());
+                ipAddresses[spreadDto.LobbyId].Add(NetworkUtils.GetIpWithPort());
 
-                foreach(string ip in ipAddresses[spreadDto.LobbyId])
-                {
-                    Console.WriteLine(ip);
-                }
-
-                // ToDo: write ipAddresses to file
+                FtpService.UpdateAddresses(ipAddresses[spreadDto.LobbyId]);
             }
         }
 
         public void AddStartListener()
         {
-            Console.WriteLine("Append Start Listener");
             listener.Receive += (sender, e) => HandleStartMessage(e.Message);
         }
 

@@ -8,8 +8,6 @@ namespace RegistrationServer.Spread.Interface
 
         public string UserName { get; }
 
-        string Port { get; }
-
         public int GroupMemberCounter { get; }
 
         public void SendMulticast(MulticastType type, byte[] data);

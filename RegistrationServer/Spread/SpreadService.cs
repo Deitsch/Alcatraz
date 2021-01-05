@@ -1,5 +1,6 @@
 ﻿using RegistrationServer.Listener;
 using RegistrationServer.Repositories;
+using RegistrationServer.Services;
 using RegistrationServer.Spread.Enums;
 using RegistrationServer.Spread.Interface;
 using RegistrationServer.utils;
@@ -13,7 +14,7 @@ namespace RegistrationServer.Spread
 {
     public class SpreadService : ISpreadService
 	{
-        readonly List<string> groupMembers = new List<string>();
+		readonly List<string> groupMembers = new List<string>();
 
 		public int GroupMemberCounter { get => groupMembers.Count; }
 
@@ -26,8 +27,6 @@ namespace RegistrationServer.Spread
 		{
 			get => connection.UserName;
 		}
-
-		public string Port { get; private set; }
 
 		private bool PrimaryLeft
 		{
@@ -49,7 +48,6 @@ namespace RegistrationServer.Spread
 
         public void Run()
         {
-			Port = "8080"; // ToDo: choose next free port
 			messageListener.Receive += (sender, e) => HandleMessage(e.Message);
 
 			while (true)
@@ -77,13 +75,15 @@ namespace RegistrationServer.Spread
 					if (info.Members.Length == 1)
                     {
 						primaryName = UserName;
-						// ToDo: write ip address to file
+						FtpService.UpdateAddresses(new List<string> { NetworkUtils.GetIpWithPort() });
 					}
-
 
 				}
 				else if (info.IsCausedByLeave || info.IsCausedByDisconnect)
 				{
+					if (!PrimaryLeft && IsPrimary)
+						UpdateIpAddresses();
+
 					if (PrimaryLeft && IAmNewPrimary())
 						SendMulticast(MulticastType.NewPrimary, UserName);
 				}
