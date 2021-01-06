@@ -6,7 +6,7 @@ namespace RegistrationServer
 {
     public static class ConfigFile
     {
-        public const string SPREAD_ADDRESS = "127.0.0.1";
+        public const string SPREAD_ADDRESS = "192.168.0.18";
         public const int SPREAD_PORT = 4803;
         public const string SPREAD_USER = "DSI";
         public const bool SPREAD_PRIORITY = false;

@@ -90,7 +90,7 @@ namespace Client.Services
             {
                 Console.Error.WriteLine($"Registration Server {currentServer} not found");
                 SetNextServer();
-                GetLobbies();
+                StartGame(lobbyId);
             }
         }
 
@@ -115,7 +115,7 @@ namespace Client.Services
             {
                 Console.Error.WriteLine($"Registration Server {currentServer} not found");
                 SetNextServer();
-                GetLobbies();
+                LeaveLobby(lobbyId, player);
             }
             catch (Exception e)
             {
@@ -170,7 +170,7 @@ namespace Client.Services
             {
                 Console.Error.WriteLine($"Registration Server {currentServer} not found");
                 SetNextServer();
-                GetLobbies();
+                CreateLobby(player);
             }
             catch (Exception e)
             {
@@ -203,7 +203,7 @@ namespace Client.Services
             {
                 Console.Error.WriteLine($"Registration Server {currentServer} not found");
                 SetNextServer();
-                GetLobbies();
+                JoinLobby(player);
             }
             catch (Exception e)
             {
